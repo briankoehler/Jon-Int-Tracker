@@ -67,7 +67,7 @@ def get_int():
     # Determine which participant is Jon and assign info
     parts = match_summary['participants']
     for p in parts:
-        if p['championId'] == rm.champion and p['timeline']['role'] == rm.role and p['timeline']['lane'] == rm.lane: rm.
+        if p['championId'] == rm.champion and p['timeline']['role'] == rm.role and p['timeline']['lane'] == rm.lane:
             jon_info = p
 
     # Grab info we want from stats
