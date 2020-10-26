@@ -61,7 +61,7 @@ def get_int():
             time.sleep(10)
     
     # Second API Call to check game stats
-    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(game_id) + '?&api_key=' + RIOT_KEY)
+    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
     match_summary = json.loads(response.text)
 
     # Determine which participant is Jon and assign info
