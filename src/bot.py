@@ -2,7 +2,9 @@
 import os
 import discord
 import requests, json
+import pickle
 from dotenv import load_dotenv
+from init import Summoner
 from discord.ext import tasks, commands
 
 # Loading Environemnt Variables
@@ -47,7 +49,7 @@ async def get_int():
             most_recent_match['matches'][0]['queue']
         )
 
-        # Check if a solo/duo game (NEEDS TO BE 420) ?
+        # Check if a Summoner's Rift
         if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
             return
 
@@ -82,11 +84,21 @@ async def get_int():
         print('Sending a Discord message...')
         channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
         if deaths > 19:
-            await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Be on watch for a temp ban!')
+            await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Could he get banned??')
         if deaths > 15:
             await channel.send('Jon just had a **TURBO** int with **' + str(deaths) + ' deaths!** Could he get banned for this??')
         await channel.send('Jon just died **' + str(deaths) + ' times!** Wow!')
 
+# WIP
+@tasks.loop(seconds=10)
+async def update_leaderboard():
+    print('Updating leaderboard...')
+
+    with open('../leaderboard_summoners.pkl', 'rb') as input:
+        number_of_sums = pickle.load(input)
+        summoners = pickle.load(input)
+        for summoner in summoners:
+            print('ned')
 
 # After deploying...
 @client.event
@@ -103,6 +115,10 @@ async def on_message(message):
 
     if message.content == '!jit':
         response = '**ned** test'
+        await message.channel.send(response)
+
+    if message.content == '!leaderboard':
+        response = 'Leaderboard goes here'
         await message.channel.send(response)
 
 
