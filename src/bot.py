@@ -2,22 +2,19 @@
 import os
 import discord
 import requests, json
-import time, asyncio
-import threading
 from dotenv import load_dotenv
 from discord.ext import tasks, commands
 
+# Loading Environemnt Variables
 load_dotenv()
-# Environemnt Variables
 TOKEN = os.getenv('DISCORD_TOKEN')
+CHANNEL = os.getenv('DISCORD_CHANNEL')
 RIOT_KEY = os.getenv('RIOT_KEY')
 ACCOUNT_NO = os.getenv('ACCOUNT_NO')
 DIFF = os.getenv('DIFF')
 
-# Stating Intents
-#intents = discord.Intents.default()
-#intents.members = True
-#client = discord.Client(intents=intents)
+
+# Bot Client
 client = commands.Bot(command_prefix = '!')
 
 
@@ -33,7 +30,7 @@ class Game:
 
 @tasks.loop(seconds=10)
 async def get_int():
-    print('test')
+    print('Executing get_int task...')
 
     while True:
 
@@ -51,6 +48,8 @@ async def get_int():
         )
 
         # Check if a solo/duo game (NEEDS TO BE 420) ?
+        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
+            return
 
         # Make sure not an old game
         LAST_GAME = os.getenv('LAST_GAME')
@@ -58,9 +57,10 @@ async def get_int():
             os.environ['LAST_GAME'] = str(rm.game_id)
             with open('.env', 'r') as file:
                 data = file.readlines()
-            data[10] = 'LAST_GAME = ' + str(rm.game_id) + '\n' # Dependent on line in file
+            data[9] = 'LAST_GAME = ' + str(rm.game_id) + '\n' # Dependent on line in file
             with open('.env', 'w') as file:
                 file.writelines(data)
+            print('Found a new completed match...')
             break
         return
     
@@ -79,15 +79,16 @@ async def get_int():
     deaths = jon_info['stats']['deaths']
 
     if deaths - kills >= int(DIFF):
-        channel = client.get_channel(769329381902123011) # TODO Change this to be more flexible
+        print('Sending a Discord message...')
+        channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
         if deaths > 19:
-            await channel.send(str(deaths) + ' deaths this game for Jon?  Temp ban coming up!')
+            await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Be on watch for a temp ban!')
         if deaths > 15:
-            await channel.send('Jon just had a TURBO int with ' + str(deaths) + ' deaths! Could he get banned for this??')
-        await channel.send('Jon just died ' + str(deaths) + ' times! Wow!')
+            await channel.send('Jon just had a **TURBO** int with **' + str(deaths) + ' deaths!** Could he get banned for this??')
+        await channel.send('Jon just died **' + str(deaths) + ' times!** Wow!')
 
 
-# After connecting...
+# After deploying...
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
@@ -101,7 +102,7 @@ async def on_message(message):
         return
 
     if message.content == '!jit':
-        response = 'ned test'
+        response = '**ned** test'
         await message.channel.send(response)
 
 
