@@ -2,8 +2,10 @@
 import os
 import discord
 import requests, json
-import time
+import time, asyncio
+import threading
 from dotenv import load_dotenv
+from discord.ext import tasks, commands
 
 load_dotenv()
 # Environemnt Variables
@@ -13,9 +15,10 @@ ACCOUNT_NO = os.getenv('ACCOUNT_NO')
 DIFF = os.getenv('DIFF')
 
 # Stating Intents
-intents = discord.Intents.default()
-intents.members = True
-client = discord.Client(intents=intents)
+#intents = discord.Intents.default()
+#intents.members = True
+#client = discord.Client(intents=intents)
+client = commands.Bot(command_prefix = '!')
 
 
 # Game Class
@@ -28,7 +31,9 @@ class Game:
         self.queue = queue
 
 
-def get_int():
+@tasks.loop(seconds=10)
+async def get_int():
+    print('test')
 
     while True:
 
@@ -57,8 +62,7 @@ def get_int():
             with open('.env', 'w') as file:
                 file.writelines(data)
             break
-        else:
-            time.sleep(10)
+        return
     
     # Second API Call to check game stats
     response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
@@ -75,21 +79,19 @@ def get_int():
     deaths = jon_info['stats']['deaths']
 
     if deaths - kills >= int(DIFF):
+        channel = client.get_channel(769329381902123011) # TODO Change this to be more flexible
         if deaths > 19:
-            return str(deaths) + ' deaths this game for Jon?  Temp ban coming up!'
+            await channel.send(str(deaths) + ' deaths this game for Jon?  Temp ban coming up!')
         if deaths > 15:
-            return 'Jon just had a MEGA int with ' + str(deaths) + ' deaths! Could he get banned for this??'
-        return 'Jon just died ' + str(deaths) + ' times! Wow!'
+            await channel.send('Jon just had a TURBO int with ' + str(deaths) + ' deaths! Could he get banned for this??')
+        await channel.send('Jon just died ' + str(deaths) + ' times! Wow!')
 
 
 # After connecting...
 @client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
-    # Sending message
-    while True:
-        channel = client.get_channel(769329381902123011)
-        await channel.send(get_int())
+    get_int.start()
 
 
 # Reacting to messages
@@ -99,7 +101,7 @@ async def on_message(message):
         return
 
     if message.content == '!jit':
-        response = get_int()
+        response = 'ned test'
         await message.channel.send(response)
 
 
