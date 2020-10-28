@@ -8,6 +8,6 @@ pipenv install
 
 Run the following before attempting to use the bot:
 ```
-python3 init.py
+python3 src/init.py
 ```
 It will prompt you for your Discord API token, your Discord guild name (not important at the moment), your Riot Games API key, and your desired kill-death difference.  Kill-death difference determines whether or not an update is provided for a game.
