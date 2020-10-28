@@ -3,6 +3,7 @@ import os
 import discord
 import requests, json
 import pickle
+import datetime
 from dotenv import load_dotenv
 from init import Summoner
 from discord.ext import tasks, commands
@@ -30,9 +31,13 @@ class Game:
         self.queue = queue
 
 
+def log(message):
+    print(f'[{datetime.datetime.now()}] {message}')
+
+
 @tasks.loop(seconds=10)
 async def get_int():
-    print('Executing get_int task...')
+    log('Executing get_int task...')
 
     while True:
 
@@ -41,13 +46,17 @@ async def get_int():
         most_recent_match = json.loads(response.text)
 
         # Storing information
-        rm = Game(
-            most_recent_match['matches'][0]['gameId'], 
-            most_recent_match['matches'][0]['champion'], 
-            most_recent_match['matches'][0]['role'],
-            most_recent_match['matches'][0]['lane'],
-            most_recent_match['matches'][0]['queue']
-        )
+        try:
+            rm = Game(
+                most_recent_match['matches'][0]['gameId'], 
+                most_recent_match['matches'][0]['champion'], 
+                most_recent_match['matches'][0]['role'],
+                most_recent_match['matches'][0]['lane'],
+                most_recent_match['matches'][0]['queue']
+            )
+        except:
+            log('Error getting match info...')
+            continue
 
         # Check if a Summoner's Rift
         if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
@@ -62,7 +71,7 @@ async def get_int():
             data[9] = 'LAST_GAME = ' + str(rm.game_id) + '\n' # Dependent on line in file
             with open('.env', 'w') as file:
                 file.writelines(data)
-            print('Found a new completed match...')
+            log('Found a new completed match...')
             break
         return
     
@@ -81,29 +90,30 @@ async def get_int():
     deaths = jon_info['stats']['deaths']
 
     if deaths - kills >= int(DIFF):
-        print('Sending a Discord message...')
+        log('Sending a Discord message...')
         channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
         if deaths > 19:
             await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Could he get banned??')
         if deaths > 15:
             await channel.send('Jon just had a **TURBO** int with **' + str(deaths) + ' deaths!** Could he get banned for this??')
         await channel.send('Jon just died **' + str(deaths) + ' times!** Wow!')
+    log('Kill-Death difference not large enough...')
 
 # WIP
 @tasks.loop(seconds=10)
 async def update_leaderboard():
-    print('Updating leaderboard...')
+    log('Updating leaderboard...')
 
     with open('../leaderboard_summoners.pkl', 'rb') as input:
         number_of_sums = pickle.load(input)
         summoners = pickle.load(input)
         for summoner in summoners:
-            print('ned')
+            log('ned')
 
 # After deploying...
 @client.event
 async def on_ready():
-    print(f'{client.user.name} has connected to Discord!')
+    log(f'{client.user.name} has connected to Discord!')
     get_int.start()
 
 
