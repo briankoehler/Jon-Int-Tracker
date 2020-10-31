@@ -4,6 +4,7 @@ import discord
 import requests, json
 import pickle
 import datetime
+import dotenv
 from dotenv import load_dotenv
 from init import Summoner
 from discord.ext import tasks, commands
@@ -39,40 +40,36 @@ def log(message):
 async def get_int():
     log('Executing get_int task...')
 
-    while True:
+    # API Call
+    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + ACCOUNT_NO + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
+    most_recent_match = json.loads(response.text)
 
-        # API Call
-        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + ACCOUNT_NO + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-        most_recent_match = json.loads(response.text)
+    # Storing information
+    try:
+        rm = Game(
+            most_recent_match['matches'][0]['gameId'], 
+            most_recent_match['matches'][0]['champion'], 
+            most_recent_match['matches'][0]['role'],
+            most_recent_match['matches'][0]['lane'],
+            most_recent_match['matches'][0]['queue']
+        )
+    except:
+        log('Error getting match info...')
+        return
 
-        # Storing information
-        try:
-            rm = Game(
-                most_recent_match['matches'][0]['gameId'], 
-                most_recent_match['matches'][0]['champion'], 
-                most_recent_match['matches'][0]['role'],
-                most_recent_match['matches'][0]['lane'],
-                most_recent_match['matches'][0]['queue']
-            )
-        except:
-            log('Error getting match info...')
-            continue
+    # Check if a Summoner's Rift
+    if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
+        return
 
-        # Check if a Summoner's Rift
-        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-            return
-
-        # Make sure not an old game
-        LAST_GAME = os.getenv('LAST_GAME')
-        if str(rm.game_id) != LAST_GAME:
-            os.environ['LAST_GAME'] = str(rm.game_id)
-            with open('.env', 'r') as file:
-                data = file.readlines()
-            data[9] = 'LAST_GAME = ' + str(rm.game_id) + '\n' # Dependent on line in file
-            with open('.env', 'w') as file:
-                file.writelines(data)
-            log('Found a new completed match...')
-            break
+    # Make sure not an old game
+    LAST_GAME = os.getenv('LAST_GAME')
+    log('LAST_GAME: ' + LAST_GAME)
+    if str(rm.game_id) != LAST_GAME:
+        os.environ['LAST_GAME'] = str(rm.game_id)
+        dotenv_file = dotenv.find_dotenv()
+        dotenv.set_key(dotenv_file, 'LAST_GAME', os.environ['LAST_GAME'])
+        log('Found a new completed match...')
+    else:
         return
     
     # Second API Call to check game stats
@@ -94,9 +91,12 @@ async def get_int():
         channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
         if deaths > 19:
             await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Could he get banned??')
+            return
         if deaths > 15:
             await channel.send('Jon just had a **TURBO** int with **' + str(deaths) + ' deaths!** Could he get banned for this??')
+            return
         await channel.send('Jon just died **' + str(deaths) + ' times!** Wow!')
+        return
     log('Kill-Death difference not large enough...')
 
 # WIP

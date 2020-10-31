@@ -30,16 +30,16 @@ def main():
     with open('.env', 'w') as file:
         file.write('# .env\n\n')
         file.write('# Discord Variables\n')
-        file.write(f'DISCORD_TOKEN = {DISCORD_TOKEN}\n')
-        file.write(f'DISCORD_CHANNEL = {DISCORD_CHANNEL}\n')
+        file.write(f'DISCORD_TOKEN="{DISCORD_TOKEN}"\n')
+        file.write(f'DISCORD_CHANNEL="{DISCORD_CHANNEL}"\n')
         file.write('\n')
         file.write('# Riot Variables\n')
-        file.write(f'RIOT_KEY = {RIOT_KEY}\n')
-        file.write(f'ACCOUNT_NO = {ACCOUNT_ID}\n')
-        file.write(f'LAST_GAME = {str(game_id)}\n')
+        file.write(f'RIOT_KEY="{RIOT_KEY}"\n')
+        file.write(f'ACCOUNT_NO="{ACCOUNT_ID}"\n')
+        file.write(f'LAST_GAME="{str(game_id)}"\n')
         file.write('\n')
         file.write('# App Variables\n')
-        file.write(f'DIFF = {DIFF}\n')
+        file.write(f'DIFF="{DIFF}"\n')
 
 
     # Leaderboard
