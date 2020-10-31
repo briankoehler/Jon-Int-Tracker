@@ -1,6 +1,7 @@
 # init.py
 import requests, json
 import pickle
+import time
 
 
 class Summoner:
@@ -47,6 +48,7 @@ def main():
         print("NEWSUM: " + str(newSum.encrypted_id))
         summoners_list.append(newSum)
         index = index + 1
+        time.sleep(2)
 
     # Dumping list of summoner objects to pickle file
     with open('summoners.pkl', 'wb') as output:

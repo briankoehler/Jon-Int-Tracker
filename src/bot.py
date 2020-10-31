@@ -55,6 +55,8 @@ async def get_int():
 
     for summoner in summoners:
 
+        log(f'Checking {summoner.name}...')
+
         # API Call
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.encrypted_id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
         most_recent_match = json.loads(response.text)
@@ -71,26 +73,28 @@ async def get_int():
             log('Got most recent match...')
         except:
             log('Error getting match info...')
-            return
+            continue
 
         # Check if a Summoner's Rift
         if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
             log('Match was not on Rift - Ignoring...')
-            return
+            continue
 
         # Make sure not an old game
         LAST_GAME = summoner.last_game_id
-        if str(rm.game_id) != LAST_GAME:
+        if str(rm.game_id) != str(LAST_GAME):
             summoners[summoner.id].last_game_id = rm.game_id
             log('Match is a new match...')
         else:
-            return
+            log('Old Match - Ignoring...')
+            continue
 
         # Second API Call to check game stats
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
         match_summary = json.loads(response.text)
 
         # Determine which participant is the current summoner and assign info
+        summoner_stats_info = None
         parts = match_summary['participants']
         for p in parts:
             if p['championId'] == rm.champion and p['timeline']['role'] == rm.role and p['timeline']['lane'] == rm.lane:
@@ -106,13 +110,13 @@ async def get_int():
             channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
                 await channel.send(f'**{str(deaths)} deaths** this game for {summoner.name}?  Could he get banned??')
-                return
-            if deaths > 15:
+                continue
+            if deaths > 10:
                 await channel.send(f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??')
-                return
+                continue
             await channel.send(f'{summoner.name} just died **{str(deaths)} times!** Wow!')
-            return
-        log('Kill-Death difference was not large enough...')
+            continue
+        log('Kill-Death difference was not large enough - Ignoring...')
 
 
 # After deploying...
