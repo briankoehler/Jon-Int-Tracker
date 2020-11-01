@@ -97,7 +97,7 @@ async def get_int():
         summoner_stats_info = None
         parts = match_summary['participants']
         for p in parts:
-            if p['championId'] == rm.champion and p['timeline']['role'] == rm.role and p['timeline']['lane'] == rm.lane:
+            if str(p['championId']) == str(rm.champion) and str(p['timeline']['role']) == str(rm.role) and str(p['timeline']['lane']) == str(rm.lane):
                 summoner_stats_info = p
 
         # Grab info we want from stats
@@ -109,14 +109,19 @@ async def get_int():
             log('Sending a Discord message...')
             channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
-                await channel.send(f'**{str(deaths)} deaths** this game for {summoner.name}?  Could he get banned??')
-                continue
-            if deaths > 10:
                 await channel.send(f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??')
+                continue
+            if deaths > 14:
+                await channel.send(f'**{str(deaths)} deaths** this game for {summoner.name}? Was he even trying?')
                 continue
             await channel.send(f'{summoner.name} just died **{str(deaths)} times!** Wow!')
             continue
         log('Kill-Death difference was not large enough - Ignoring...')
+
+        # Updating Pickle File
+        with open('summoners.pkl', 'wb') as output:
+            pickle.dump(len(summoners), output, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(summoners, output, pickle.HIGHEST_PROTOCOL)
 
 
 # After deploying...

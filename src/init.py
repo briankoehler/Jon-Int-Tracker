@@ -45,7 +45,6 @@ def main():
         most_recent_match = json.loads(response.text)
         game_id = most_recent_match['matches'][0]['gameId']
         newSum = Summoner(index, s, sumId, game_id)
-        print("NEWSUM: " + str(newSum.encrypted_id))
         summoners_list.append(newSum)
         index = index + 1
         time.sleep(2)
