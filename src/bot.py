@@ -70,6 +70,8 @@ async def get_int():
                 most_recent_match['matches'][0]['lane'],
                 most_recent_match['matches'][0]['queue']
             )
+            if rm.lane == 'MID':
+                rm.lane = 'MIDDLE'
             log('Got most recent match...')
         except:
             log('Error getting match info...')
