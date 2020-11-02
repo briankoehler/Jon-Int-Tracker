@@ -14,7 +14,6 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = os.getenv('DISCORD_CHANNEL')
 RIOT_KEY = os.getenv('RIOT_KEY')
-ACCOUNT_NO = os.getenv('ACCOUNT_NO')
 DIFF = os.getenv('DIFF')
 
 
@@ -40,75 +39,92 @@ def log(message):
 async def get_int():
     log('Executing get_int task...')
 
-    # API Call
-    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + ACCOUNT_NO + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-    most_recent_match = json.loads(response.text)
+    # Initialization
+    summoners = []
 
-    # Storing information
-    try:
-        rm = Game(
-            most_recent_match['matches'][0]['gameId'], 
-            most_recent_match['matches'][0]['champion'], 
-            most_recent_match['matches'][0]['role'],
-            most_recent_match['matches'][0]['lane'],
-            most_recent_match['matches'][0]['queue']
-        )
-    except:
-        log('Error getting match info...')
-        return
+    # Retrieving summoner info from pickle
+    pickle_file = open('summoners.pkl', 'rb')
+    number_of_sums = pickle.load(pickle_file)
+    summoners_list = pickle.load(pickle_file)
 
-    # Check if a Summoner's Rift
-    if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-        return
+    # Adding Summoner objects to list
+    for i in range(number_of_sums):
+        newSum = Summoner(i, summoners_list[i].name, summoners_list[i].encrypted_id, summoners_list[i].last_game_id)
+        log(f'Summoner {newSum.name} found in pickle...')
+        summoners.append(newSum)
 
-    # Make sure not an old game
-    LAST_GAME = os.getenv('LAST_GAME')
-    log('LAST_GAME: ' + LAST_GAME)
-    if str(rm.game_id) != LAST_GAME:
-        os.environ['LAST_GAME'] = str(rm.game_id)
-        dotenv_file = dotenv.find_dotenv()
-        dotenv.set_key(dotenv_file, 'LAST_GAME', os.environ['LAST_GAME'])
-        log('Found a new completed match...')
-    else:
-        return
-    
-    # Second API Call to check game stats
-    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
-    match_summary = json.loads(response.text)
+    for summoner in summoners:
 
-    # Determine which participant is Jon and assign info
-    parts = match_summary['participants']
-    for p in parts:
-        if p['championId'] == rm.champion and p['timeline']['role'] == rm.role and p['timeline']['lane'] == rm.lane:
-            jon_info = p
+        log(f'Checking {summoner.name}...')
 
-    # Grab info we want from stats
-    kills = jon_info['stats']['kills']
-    deaths = jon_info['stats']['deaths']
+        # API Call
+        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.encrypted_id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
+        most_recent_match = json.loads(response.text)
 
-    if deaths - kills >= int(DIFF):
-        log('Sending a Discord message...')
-        channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
-        if deaths > 19:
-            await channel.send('**' + str(deaths) + ' deaths** this game for Jon?  Could he get banned??')
-            return
-        if deaths > 15:
-            await channel.send('Jon just had a **TURBO** int with **' + str(deaths) + ' deaths!** Could he get banned for this??')
-            return
-        await channel.send('Jon just died **' + str(deaths) + ' times!** Wow!')
-        return
-    log('Kill-Death difference not large enough...')
+        # Storing information
+        try:
+            rm = Game(
+                most_recent_match['matches'][0]['gameId'], 
+                most_recent_match['matches'][0]['champion'], 
+                most_recent_match['matches'][0]['role'],
+                most_recent_match['matches'][0]['lane'],
+                most_recent_match['matches'][0]['queue']
+            )
+            if rm.lane == 'MID':
+                rm.lane = 'MIDDLE'
+            log('Got most recent match...')
+        except:
+            log('Error getting match info...')
+            continue
 
-# WIP
-@tasks.loop(seconds=10)
-async def update_leaderboard():
-    log('Updating leaderboard...')
+        # Check if a Summoner's Rift
+        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
+            log('Match was not on Rift - Ignoring...')
+            continue
 
-    with open('../leaderboard_summoners.pkl', 'rb') as input:
-        number_of_sums = pickle.load(input)
-        summoners = pickle.load(input)
-        for summoner in summoners:
-            log('ned')
+        # Make sure not an old game
+        LAST_GAME = summoner.last_game_id
+        if str(rm.game_id) != str(LAST_GAME):
+            summoners[summoner.id].last_game_id = rm.game_id
+            log('Match is a new match...')
+        else:
+            log('Old Match - Ignoring...')
+            continue
+
+        # Second API Call to check game stats
+        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
+        match_summary = json.loads(response.text)
+
+        # Determine which participant is the current summoner and assign info
+        summoner_stats_info = None
+        parts = match_summary['participants']
+        for p in parts:
+            if str(p['championId']) == str(rm.champion) and str(p['timeline']['role']) == str(rm.role) and str(p['timeline']['lane']) == str(rm.lane):
+                summoner_stats_info = p
+
+        # Grab info we want from stats
+        kills = summoner_stats_info['stats']['kills']
+        deaths = summoner_stats_info['stats']['deaths']
+
+        # Sending a Discord message
+        if deaths - kills >= int(DIFF):
+            log('Sending a Discord message...')
+            channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
+            if deaths > 19:
+                msg = f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??'
+            elif deaths > 14:
+                msg = f'**{str(deaths)} deaths** this game for {summoner.name}? Was he even trying?'
+            else:
+                msg = f'{summoner.name} just died **{str(deaths)} times!** Wow!'
+            await channel.send(msg)
+        else:
+            log('Kill-Death difference was not large enough - Ignoring...')
+
+        # Updating Pickle File
+        with open('summoners.pkl', 'wb') as output:
+            pickle.dump(len(summoners), output, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(summoners, output, pickle.HIGHEST_PROTOCOL)
+
 
 # After deploying...
 @client.event
