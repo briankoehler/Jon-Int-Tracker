@@ -1,8 +1,17 @@
 import pickle
 import requests, json
-from bot import Match
 from init import Summoner
 from datetime import date
+
+class Match:
+    def __init__(self, champ_id, kills, deaths):
+        self.champ_id = champ_id
+        for champion in champions['data']:
+            if champions['data'][champion]['key'] == str(champ_id):
+                self.champ = champion
+        self.kills = kills
+        self.deaths = deaths
+        self.date = date.today()
 
 response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
 champions = json.loads(response.text)
