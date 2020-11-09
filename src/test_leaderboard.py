@@ -1,5 +1,5 @@
 import pickle
-import request, json
+import requests, json
 from bot import Match
 from init import Summoner
 from datetime import date
