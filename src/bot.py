@@ -22,7 +22,7 @@ champions = json.loads(response.text)
 
 
 # Bot Client
-client = commands.Bot(command_prefix = '?')
+bot = commands.Bot(command_prefix = '?')
 
 
 # Game Class
@@ -134,7 +134,7 @@ async def get_int():
         # Sending a Discord message
         if deaths - kills >= int(DIFF):
             log('Sending a Discord message...')
-            channel = client.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
+            channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
                 msg = f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??'
             elif deaths > 14:
@@ -153,7 +153,7 @@ async def get_int():
 
 
 # Leaderboard Command
-@client.command()
+@bot.command()
 async def leaderboard(ctx):
     leaderboard_list = load_leaderboard()
     leaderboard_string = '**INT LEADERBOARD**\n---------------\n'
@@ -165,16 +165,16 @@ async def leaderboard(ctx):
 
 
 # After deploying...
-@client.event
+@bot.event
 async def on_ready():
-    log(f'{client.user.name} has connected to Discord!')
+    log(f'{bot.user.name} has connected to Discord!')
     get_int.start()
 
 
 # Reacting to messages
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
     if message.content == '!jit':
@@ -186,4 +186,4 @@ async def on_message(message):
         await message.channel.send(response)
 
 
-client.run(TOKEN)
+bot.run(TOKEN)
