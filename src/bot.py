@@ -8,6 +8,7 @@ import dotenv
 from dotenv import load_dotenv
 from init import Summoner
 from discord.ext import tasks, commands
+from datetime import date
 
 # Loading Environemnt Variables
 load_dotenv()
@@ -16,9 +17,12 @@ CHANNEL = os.getenv('DISCORD_CHANNEL')
 RIOT_KEY = os.getenv('RIOT_KEY')
 DIFF = os.getenv('DIFF')
 
+response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
+champions = json.loads(response.text)
+
 
 # Bot Client
-client = commands.Bot(command_prefix = '!')
+client = commands.Bot(command_prefix = '?')
 
 
 # Game Class
@@ -30,9 +34,30 @@ class Game:
         self.lane = lane
         self.queue = queue
 
+# Match Class
+class Match:
+    def __init__(self, champ_id, kills, deaths):
+        self.champ_id = champ_id
+        for champion in champions['data']:
+            if champions['data'][champion]['key'] == str(champ_id):
+                self.champ = champion
+        self.kills = kills
+        self.deaths = deaths
+        self.date = date.today()
+
 
 def log(message):
     print(f'[{datetime.datetime.now()}] {message}')
+
+def load_leaderboard():
+    leaderboard_file = open('leaderboard.pkl', 'rb')
+    data = leaderboard_file.load(leaderboard_file)
+
+    leaderboard_matches = []
+    for match in data:
+        new_match = Match(match.champ_id, match.kills, match.deaths)
+        leaderboard_matches.append(new_match)
+    return leaderboard_matches
 
 
 @tasks.loop(seconds=10)
@@ -126,6 +151,19 @@ async def get_int():
             pickle.dump(summoners, output, pickle.HIGHEST_PROTOCOL)
 
 
+
+# Leaderboard Command
+@client.command()
+async def leaderboard(ctx):
+    leaderboard_list = load_leaderboard()
+    leaderboard_string = '**INT LEADERBOARD**\n---------------\n'
+    num = 1
+    for match in leaderboard_list:
+        leaderboard_string += f'{num}) {match.champ} with {match.kills} kills and {match.deaths} deaths'
+        num = num + 1
+    await ctx.send(leaderboard_string)
+
+
 # After deploying...
 @client.event
 async def on_ready():
@@ -144,7 +182,7 @@ async def on_message(message):
         await message.channel.send(response)
 
     if message.content == '!leaderboard':
-        response = 'Leaderboard goes here'
+        response = 'Outdated'
         await message.channel.send(response)
 
 

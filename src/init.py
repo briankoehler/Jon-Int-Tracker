@@ -2,6 +2,10 @@
 import requests, json
 import pickle
 import time
+from datetime import date
+
+response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
+champions = json.loads(response.text)
 
 
 class Summoner:
@@ -10,6 +14,16 @@ class Summoner:
         self.name = name
         self.encrypted_id = encrypted_id
         self.last_game_id = last_game_id
+
+class Match:
+    def __init__(self, champ_id, kills, deaths):
+        self.champ_id = champ_id
+        for champion in champions['data']:
+            if champions['data'][champion]['key'] == str(champ_id):
+                self.champ = champion
+        self.kills = kills
+        self.deaths = deaths
+        self.date = date.today()
 
 
 def main():
@@ -66,6 +80,16 @@ def main():
         file.write('\n')
         file.write('# App Variables\n')
         file.write(f'DIFF="{DIFF}"\n')
+
+    # Initializing leaderboard file
+    matches = []
+    for i in range(10):
+        new_match = Match(-1, -1, -1)
+        matches.append(new_match)
+
+    # Leaderboard Creation
+    with open('leaderboard.pkl', 'wb') as output:
+        pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__":
     main()
