@@ -15,14 +15,24 @@ class Summoner:
         self.encrypted_id = encrypted_id
         self.last_game_id = last_game_id
 
+class Game:
+    def __init__(self, game_id, champion, role, lane, queue):
+        self.game_id = game_id
+        self.champion = champion
+        self.role = role
+        self.lane = lane
+        self.queue = queue
+
 class Match:
-    def __init__(self, champ_id, kills, deaths):
+    def __init__(self, champ_id, summoner, kills, deaths, assists):
         self.champ_id = champ_id
         for champion in champions['data']:
             if champions['data'][champion]['key'] == str(champ_id):
                 self.champ = champion
+        self.summoner = summoner
         self.kills = kills
         self.deaths = deaths
+        self.assists = assists
         self.date = date.today()
 
 
@@ -84,7 +94,7 @@ def main():
     # Initializing leaderboard file
     matches = []
     for i in range(10):
-        new_match = Match(-1, -1, -1)
+        new_match = Match(-1, '', -1, -1, -1)
         matches.append(new_match)
 
     # Leaderboard Creation

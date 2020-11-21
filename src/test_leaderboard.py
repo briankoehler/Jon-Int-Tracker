@@ -1,42 +1,32 @@
 import pickle
 import requests, json
-from init import Summoner
+from init import Summoner, Match, Game
 from datetime import date
-
-class Match:
-    def __init__(self, champ_id, kills, deaths):
-        self.champ_id = champ_id
-        for champion in champions['data']:
-            if champions['data'][champion]['key'] == str(champ_id):
-                self.champ = champion
-        self.kills = kills
-        self.deaths = deaths
-        self.date = date.today()
 
 response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
 champions = json.loads(response.text)
 
 matches = []
 
-match_1 = Match(17, 4, 30)
+match_1 = Match(17, "The Mindwalker", 4, 30, 0)
 matches.append(match_1)
-match_2 = Match(17, 4, 26)
+match_2 = Match(17, "The Mindwalker", 4, 26, 0)
 matches.append(match_2)
-match_3 = Match(17, 4, 25)
+match_3 = Match(17, "The Mindwalker", 4, 25, 0)
 matches.append(match_3)
-match_4 = Match(17, 4, 24)
+match_4 = Match(17, "The Mindwalker", 4, 24, 0)
 matches.append(match_4)
-match_5 = Match(17, 4, 23)
+match_5 = Match(17, "The Mindwalker", 4, 23, 0)
 matches.append(match_5)
-match_6 = Match(17, 4, 22)
+match_6 = Match(17, "The Mindwalker", 4, 22, 0)
 matches.append(match_6)
-match_7 = Match(17, 4, 21)
+match_7 = Match(17, "The Mindwalker", 4, 21, 0)
 matches.append(match_7)
-match_8 = Match(17, 4, 20)
+match_8 = Match(17, "The Mindwalker", 4, 20, 0)
 matches.append(match_8)
-match_9 = Match(17, 4, 19)
+match_9 = Match(17, "The Mindwalker", 4, 19, 0)
 matches.append(match_9)
-match_10 = Match(17, 4, 18)
+match_10 = Match(17, "The Mindwalker", 4, 18, 0)
 matches.append(match_10)
 
 with open('leaderboard.pkl', 'wb') as output:
