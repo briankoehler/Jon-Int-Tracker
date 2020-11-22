@@ -5,8 +5,8 @@ import requests, json
 import pickle
 import datetime
 import dotenv
-from dotenv import load_dotenv
 from init import Summoner, Game, Match
+from dotenv import load_dotenv
 from discord.ext import tasks, commands
 from datetime import date
 
@@ -148,7 +148,7 @@ async def leaderboard(ctx):
     await ctx.send(leaderboard_string)
 
 
-# List Command
+# List Summoners being tracked
 @bot.command()
 async def list(ctx):
     summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
@@ -163,12 +163,11 @@ async def list(ctx):
 
     # Adding Summoner names to string of message to send
     for i in range(number_of_sums):
-        newSum = Summoner(i, summoners_list[i].name, summoners_list[i].encrypted_id, summoners_list[i].last_game_id)
-        summoners_string += f'• {newSum.name}\n'
+        summoners_string += f'• {summoners_list[i].name} (ID: {summoners_list[i].id})\n'
     await ctx.send(summoners_string)
 
 
-# Add Command
+# Add a new Summoner to keep track of
 @bot.command()
 async def add(ctx, name):
     response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + name + '?api_key=' + RIOT_KEY)
@@ -194,7 +193,40 @@ async def add(ctx, name):
         pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
 
-    ctx.send(f'Added **{name}** to tracking list.')
+    await ctx.send(f'Added **{name}** to tracking list.')
+
+
+@bot.command()
+async def remove(ctx, name):
+    # Retrieving summoner info from pickle
+    try:
+        pickle_file = open('summoners.pkl', 'rb')
+    except:
+        log('Summoners file not found...')
+        return
+    number_of_sums = pickle.load(pickle_file)
+    summoners_list = pickle.load(pickle_file)
+
+    found = False
+    i = 0
+    while i < len(summoners_list):
+        if summoners_list[i].name == name:
+            found = True
+            del summoners_list[i]
+            i -= 1
+        elif found:
+            summoners_list[i].id -= 1
+        i += 1
+
+    # Dumping list of summoner objects to pickle file
+    with open('summoners.pkl', 'wb') as output:
+        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
+
+    if found:
+        await ctx.send(f'Removed {name} from tracking list.')
+        return
+    await ctx.send(f'Unable to find {name} in tracking list.')
 
 
 # After deploying...
