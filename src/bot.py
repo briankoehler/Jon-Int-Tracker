@@ -39,6 +39,28 @@ def load_leaderboard():
         leaderboard_matches.append(new_match)
     return leaderboard_matches
 
+def write_leaderboard(matches):
+    with open('leaderboard.pkl', 'wb') as output:
+        pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
+
+def update_leaderboard(m):
+    leaderboard_matches = load_leaderboard()
+    updated = False
+    i = 0
+    while i < len(leaderboard_matches):
+        if m.deaths > leaderboard_matches[i].deaths:
+            leaderboard_matches.insert(i, m)
+            updated = True
+            break
+        if m.deaths == leaderboard_matches[i].deaths:
+            if m.kills < leaderboard_matches[i].kills:
+                leaderboard_matches.insert(i, m)
+                updated = True
+                break
+        i += 1
+    if updated:
+        del leaderboard_matches[len(leaderboard_matches) - 1]
+    write_leaderboard(leaderboard_matches)
 
 @tasks.loop(seconds=10)
 async def get_int():
@@ -114,9 +136,12 @@ async def get_int():
         # Grab info we want from stats
         kills = summoner_stats_info['stats']['kills']
         deaths = summoner_stats_info['stats']['deaths']
+        assists = summoner_stats_info['stats']['assists']
 
         # Sending a Discord message
         if deaths - kills >= int(DIFF):
+            new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
+            update_leaderboard(new_leaderboard_match)
             log(f'Sending a Discord message for {summoner.name}...')
             channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
