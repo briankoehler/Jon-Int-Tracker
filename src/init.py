@@ -3,17 +3,11 @@ import requests, json
 import pickle
 import time
 from datetime import date
+from summoners import Summoner
+from leaderboard import Match
 
 response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
 champions = json.loads(response.text)
-
-
-class Summoner:
-    def __init__(self, id, name, encrypted_id, last_game_id):
-        self.id = id
-        self.name = name
-        self.encrypted_id = encrypted_id
-        self.last_game_id = last_game_id
 
 class Game:
     def __init__(self, game_id, champion, role, lane, queue):
@@ -22,18 +16,6 @@ class Game:
         self.role = role
         self.lane = lane
         self.queue = queue
-
-class Match:
-    def __init__(self, champ_id, summoner, kills, deaths, assists):
-        self.champ_id = champ_id
-        for champion in champions['data']:
-            if champions['data'][champion]['key'] == str(champ_id):
-                self.champ = champion
-        self.summoner = summoner
-        self.kills = kills
-        self.deaths = deaths
-        self.assists = assists
-        self.date = date.today()
 
 
 def main():

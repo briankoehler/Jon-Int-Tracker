@@ -5,24 +5,10 @@ import requests, json
 import dotenv
 from init import Summoner, Game, Match
 from leaderboard import *
+from summoners import *
 from dotenv import load_dotenv
 from discord.ext import tasks, commands
 from datetime import date
-
-# Loading Environemnt Variables
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-CHANNEL = os.getenv('DISCORD_CHANNEL')
-RIOT_KEY = os.getenv('RIOT_KEY')
-DIFF = os.getenv('DIFF')
-
-# Loading Champions based on ID
-response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
-champions = json.loads(response.text)
-
-
-# Bot Client
-bot = commands.Bot(command_prefix = '?')
 
 
 def log(message):
@@ -32,24 +18,6 @@ def log(message):
         message (String): Message to print
     """
     print(f'[{datetime.datetime.now()}] {message}')
-
-def load_summoners():
-    try:
-        pickle_file = open('summoners.pkl', 'rb')
-    except:
-        log('Summoners file not found...')
-        return
-    return pickle.load(pickle_file), pickle.load(pickle_file)
-
-def update_summoners(summoners_list):
-    """Updates the summoners pickle
-
-    Args:
-        summoners_list (List): List containing summoners to track
-    """
-    with open('summoners.pkl', 'wb') as output:
-        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
 
 
 def is_int(kills, deaths, assists):
@@ -76,16 +44,11 @@ async def get_int():
     summoners = []
 
     # Retrieving summoner info from pickle
-    try:
-        pickle_file = open('summoners.pkl', 'rb')
-    except:
-        log('Summoners file not found...')
-        return
-    number_of_sums = pickle.load(pickle_file)
-    summoners_list = pickle.load(pickle_file)
+    number_of_sums, summoners_list = load_summoners()
 
     # Adding Summoner objects to list
     for i in range(number_of_sums):
+        
         newSum = Summoner(i, summoners_list[i].name, summoners_list[i].encrypted_id, summoners_list[i].last_game_id)
         # log(f'Summoner {newSum.name} found in pickle...')
         summoners.append(newSum)
@@ -179,13 +142,7 @@ async def list(ctx):
     summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
 
     # Retrieving summoner info from pickle
-    try:
-        pickle_file = open('summoners.pkl', 'rb')
-    except:
-        log('Summoners file not found...')
-        return
-    number_of_sums = pickle.load(pickle_file)
-    summoners_list = pickle.load(pickle_file)
+    number_of_sums, summoners_list = load_summoners()
 
     # Adding Summoner names to string of message to send
     for i in range(number_of_sums):
@@ -210,13 +167,7 @@ async def add(ctx, name):
     game_id = most_recent_match['matches'][0]['gameId']
 
     # Retrieving summoner info from pickle
-    try:
-        pickle_file = open('summoners.pkl', 'rb')
-    except:
-        log('Summoners file not found...')
-        return
-    number_of_sums = pickle.load(pickle_file)
-    summoners_list = pickle.load(pickle_file)
+    number_of_sums, summoners_list = load_summoners()
 
     newSum = Summoner(number_of_sums, name, sumId, game_id)
     summoners_list.append(newSum)
@@ -235,13 +186,7 @@ async def remove(ctx, name):
     """
 
     # Retrieving summoner info from pickle
-    try:
-        pickle_file = open('summoners.pkl', 'rb')
-    except:
-        log('Summoners file not found...')
-        return
-    number_of_sums = pickle.load(pickle_file)
-    summoners_list = pickle.load(pickle_file)
+    number_of_sums, summoners_list = load_summoners()
 
     found = False
     i = 0
@@ -270,4 +215,19 @@ async def on_ready():
     get_int.start()
 
 
-bot.run(TOKEN)
+if __name__ == '__main__':
+    # Loading Environemnt Variables
+    load_dotenv()
+    TOKEN = os.getenv('DISCORD_TOKEN')
+    CHANNEL = os.getenv('DISCORD_CHANNEL')
+    RIOT_KEY = os.getenv('RIOT_KEY')
+    DIFF = os.getenv('DIFF')
+
+    # Loading Champions based on ID
+    response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
+    champions = json.loads(response.text)
+
+    # Bot Client
+    bot = commands.Bot(command_prefix = '?')
+
+    bot.run(TOKEN)
