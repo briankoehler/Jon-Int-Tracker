@@ -1,11 +1,10 @@
 # bot.py
-import os
+import os, datetime, pickle
 import discord
 import requests, json
-import pickle
-import datetime
 import dotenv
 from init import Summoner, Game, Match
+from leaderboard import *
 from dotenv import load_dotenv
 from discord.ext import tasks, commands
 from datetime import date
@@ -27,43 +26,50 @@ bot = commands.Bot(command_prefix = '?')
 
 
 def log(message):
+    """Prints a message to the console with date/time
+
+    Args:
+        message (String): Message to print
+    """
     print(f'[{datetime.datetime.now()}] {message}')
 
-def load_leaderboard():
-    leaderboard_file = open('leaderboard.pkl', 'rb')
-    data = pickle.load(leaderboard_file)
+def load_summoners():
+    try:
+        pickle_file = open('summoners.pkl', 'rb')
+    except:
+        log('Summoners file not found...')
+        return
+    return pickle.load(pickle_file), pickle.load(pickle_file)
 
-    leaderboard_matches = []
-    for match in data:
-        new_match = Match(match.champ_id, match.summoner, match.kills, match.deaths, match.assists)
-        leaderboard_matches.append(new_match)
-    return leaderboard_matches
+def update_summoners(summoners_list):
+    """Updates the summoners pickle
 
-def write_leaderboard(matches):
-    with open('leaderboard.pkl', 'wb') as output:
-        pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
+    Args:
+        summoners_list (List): List containing summoners to track
+    """
+    with open('summoners.pkl', 'wb') as output:
+        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
 
-def update_leaderboard(m):
-    leaderboard_matches = load_leaderboard()
-    updated = False
-    i = 0
-    while i < len(leaderboard_matches):
-        if m.deaths > leaderboard_matches[i].deaths:
-            leaderboard_matches.insert(i, m)
-            updated = True
-            break
-        if m.deaths == leaderboard_matches[i].deaths:
-            if m.kills < leaderboard_matches[i].kills:
-                leaderboard_matches.insert(i, m)
-                updated = True
-                break
-        i += 1
-    if updated:
-        del leaderboard_matches[len(leaderboard_matches) - 1]
-    write_leaderboard(leaderboard_matches)
+
+def is_int(kills, deaths, assists):
+    """Determines whether or not a match with given kda is an "int"
+
+    Args:
+        kills (int): # of kills
+        deaths (int): # of deaths
+        assists (int): # of assists
+
+    Returns:
+        boolean: True if int, False if not
+    """
+    return False
+
 
 @tasks.loop(seconds=10)
 async def get_int():
+    """Every 10s, check most recent match for every summoner int the summoners pickle and determine if it is an int"""
+
     log('Executing get_int task...')
 
     # Initialization
@@ -86,8 +92,6 @@ async def get_int():
 
     for summoner in summoners:
 
-        # log(f'Checking {summoner.name}...')
-
         # API Call
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.encrypted_id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
         most_recent_match = json.loads(response.text)
@@ -103,23 +107,19 @@ async def get_int():
             )
             if rm.lane == 'MID':
                 rm.lane = 'MIDDLE'
-            # log('Got most recent match...')
         except:
             log(f'Error getting match info for {summoner.name}...')
             continue
 
         # Check if a Summoner's Rift
         if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-            # log('Match was not on Rift - Ignoring...')
             continue
 
         # Make sure not an old game
         LAST_GAME = summoner.last_game_id
         if str(rm.game_id) != str(LAST_GAME):
             summoners[summoner.id].last_game_id = rm.game_id
-            # log('Match is a new match...')
         else:
-            # log('Old Match - Ignoring...')
             continue
 
         # Second API Call to check game stats
@@ -138,7 +138,7 @@ async def get_int():
         deaths = summoner_stats_info['stats']['deaths']
         assists = summoner_stats_info['stats']['assists']
 
-        # Sending a Discord message
+        # Sending a Discord message TODO Add more message variation
         if deaths - kills >= int(DIFF):
             new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
             update_leaderboard(new_leaderboard_match)
@@ -151,19 +151,16 @@ async def get_int():
             else:
                 msg = f'{summoner.name} just died **{str(deaths)} times!** Wow!'
             await channel.send(msg)
-        #else:
-            # log(f'Match for {summoner.name} not an int...')
 
         # Updating Pickle File
-        with open('summoners.pkl', 'wb') as output:
-            pickle.dump(len(summoners), output, pickle.HIGHEST_PROTOCOL)
-            pickle.dump(summoners, output, pickle.HIGHEST_PROTOCOL)
-
+        update_summoners(summoners)
 
 
 # Leaderboard Command
 @bot.command()
 async def leaderboard(ctx):
+    """Sends a message with the top 10 int matches"""
+
     leaderboard_list = load_leaderboard()
     leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
     num = 1
@@ -176,7 +173,11 @@ async def leaderboard(ctx):
 # List Summoners being tracked
 @bot.command()
 async def list(ctx):
+    """Sends a message with all summoners being tracked"""
+
+    # Initialization
     summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
+
     # Retrieving summoner info from pickle
     try:
         pickle_file = open('summoners.pkl', 'rb')
@@ -195,6 +196,12 @@ async def list(ctx):
 # Add a new Summoner to keep track of
 @bot.command()
 async def add(ctx, name):
+    """Adds a summoner to the tracking list
+
+    Args:
+        name (String): Name of summoner to add
+    """
+
     response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + name + '?api_key=' + RIOT_KEY)
     account_info = json.loads(response.text)
     sumId = account_info['accountId']
@@ -214,15 +221,19 @@ async def add(ctx, name):
     newSum = Summoner(number_of_sums, name, sumId, game_id)
     summoners_list.append(newSum)
     # Dumping list of summoner objects to pickle file
-    with open('summoners.pkl', 'wb') as output:
-        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
+    update_summoners(summoners_list)
 
     await ctx.send(f'Added **{name}** to tracking list.')
 
 
 @bot.command()
 async def remove(ctx, name):
+    """Removes a summoner from traking list
+
+    Args:
+        name (String): Name of summoner to remove
+    """
+
     # Retrieving summoner info from pickle
     try:
         pickle_file = open('summoners.pkl', 'rb')
@@ -244,9 +255,7 @@ async def remove(ctx, name):
         i += 1
 
     # Dumping list of summoner objects to pickle file
-    with open('summoners.pkl', 'wb') as output:
-        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
+    update_summoners(summoners_list)
 
     if found:
         await ctx.send(f'Removed {name} from tracking list.')
