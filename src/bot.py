@@ -4,11 +4,15 @@ import discord
 import requests, json
 import dotenv
 from init import Summoner, Game, Match
-from leaderboard import *
-from summoners import *
+from summoners import load_summoners, update_summoners
+from leaderboard import update_leaderboard
 from dotenv import load_dotenv
 from discord.ext import tasks, commands
 from datetime import date
+
+
+# Bot Client
+bot = commands.Bot(command_prefix = '?')
 
 
 def log(message):
@@ -50,7 +54,6 @@ async def get_int():
     for i in range(number_of_sums):
         
         newSum = Summoner(i, summoners_list[i].name, summoners_list[i].encrypted_id, summoners_list[i].last_game_id)
-        # log(f'Summoner {newSum.name} found in pickle...')
         summoners.append(newSum)
 
     for summoner in summoners:
@@ -119,95 +122,6 @@ async def get_int():
         update_summoners(summoners)
 
 
-# Leaderboard Command
-@bot.command()
-async def leaderboard(ctx):
-    """Sends a message with the top 10 int matches"""
-
-    leaderboard_list = load_leaderboard()
-    leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
-    num = 1
-    for match in leaderboard_list:
-        leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
-        num = num + 1
-    await ctx.send(leaderboard_string)
-
-
-# List Summoners being tracked
-@bot.command()
-async def list(ctx):
-    """Sends a message with all summoners being tracked"""
-
-    # Initialization
-    summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
-
-    # Retrieving summoner info from pickle
-    number_of_sums, summoners_list = load_summoners()
-
-    # Adding Summoner names to string of message to send
-    for i in range(number_of_sums):
-        summoners_string += f'• {summoners_list[i].name} (ID: {summoners_list[i].id})\n'
-    await ctx.send(summoners_string)
-
-
-# Add a new Summoner to keep track of
-@bot.command()
-async def add(ctx, name):
-    """Adds a summoner to the tracking list
-
-    Args:
-        name (String): Name of summoner to add
-    """
-
-    response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + name + '?api_key=' + RIOT_KEY)
-    account_info = json.loads(response.text)
-    sumId = account_info['accountId']
-    response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + sumId + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-    most_recent_match = json.loads(response.text)
-    game_id = most_recent_match['matches'][0]['gameId']
-
-    # Retrieving summoner info from pickle
-    number_of_sums, summoners_list = load_summoners()
-
-    newSum = Summoner(number_of_sums, name, sumId, game_id)
-    summoners_list.append(newSum)
-    # Dumping list of summoner objects to pickle file
-    update_summoners(summoners_list)
-
-    await ctx.send(f'Added **{name}** to tracking list.')
-
-
-@bot.command()
-async def remove(ctx, name):
-    """Removes a summoner from traking list
-
-    Args:
-        name (String): Name of summoner to remove
-    """
-
-    # Retrieving summoner info from pickle
-    number_of_sums, summoners_list = load_summoners()
-
-    found = False
-    i = 0
-    while i < len(summoners_list):
-        if summoners_list[i].name == name:
-            found = True
-            del summoners_list[i]
-            i -= 1
-        elif found:
-            summoners_list[i].id -= 1
-        i += 1
-
-    # Dumping list of summoner objects to pickle file
-    update_summoners(summoners_list)
-
-    if found:
-        await ctx.send(f'Removed {name} from tracking list.')
-        return
-    await ctx.send(f'Unable to find {name} in tracking list.')
-
-
 # After deploying...
 @bot.event
 async def on_ready():
@@ -227,7 +141,7 @@ if __name__ == '__main__':
     response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
     champions = json.loads(response.text)
 
-    # Bot Client
-    bot = commands.Bot(command_prefix = '?')
+    bot.load_extension("summoners")
+    bot.load_extension("leaderboard")
 
     bot.run(TOKEN)

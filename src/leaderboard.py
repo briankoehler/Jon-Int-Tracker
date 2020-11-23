@@ -2,6 +2,7 @@
 import pickle
 import requests, json
 from datetime import date
+from discord.ext import commands
 
 class Match:
     def __init__(self, champ_id, summoner, kills, deaths, assists):
@@ -64,3 +65,24 @@ def update_leaderboard(m):
     if updated:
         del leaderboard_matches[len(leaderboard_matches) - 1]
     write_leaderboard(leaderboard_matches)
+
+class LeaderBoardCog(commands.Cog):
+    
+    def __init__(self, bot):
+        self.bot = bot
+    
+    # Leaderboard Command
+    @commands.command()
+    async def leaderboard(self, ctx):
+        """Sends a message with the top 10 int matches"""
+
+        leaderboard_list = load_leaderboard()
+        leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
+        num = 1
+        for match in leaderboard_list:
+            leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
+            num = num + 1
+        await ctx.send(leaderboard_string)
+
+def setup(bot):
+    bot.add_cog(LeaderBoardCog(bot))
