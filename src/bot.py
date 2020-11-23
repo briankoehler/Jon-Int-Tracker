@@ -3,18 +3,10 @@ import os, datetime, pickle
 import discord
 import requests, json
 import dotenv
-from summoners import load_summoners, update_summoners, Summoner
+from summoners import load_summoners, update_summoners, Summoner, Game
 from leaderboard import update_leaderboard, Match
 from discord.ext import tasks, commands
 from datetime import date
-
-class Game:
-    def __init__(self, game_id, champion, role, lane, queue):
-        self.game_id = game_id
-        self.champion = champion
-        self.role = role
-        self.lane = lane
-        self.queue = queue
 
 
 # Bot Client
