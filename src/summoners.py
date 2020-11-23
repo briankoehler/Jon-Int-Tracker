@@ -12,13 +12,6 @@ class Summoner:
         self.encrypted_id = encrypted_id
         self.last_game_id = last_game_id
 
-    """Prints a message to the console with date/time
-
-    Args:
-        message (String): Message to print
-    """
-    print(f'[{datetime.datetime.now()}] {message}')
-
 def load_summoners():
     """Loads the summoners pickle
 
