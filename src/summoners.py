@@ -1,6 +1,6 @@
 # summoners.py
 import pickle
-import datetime
+import datetime, os
 import requests, json
 from discord.ext import commands
 from datetime import date
@@ -11,6 +11,7 @@ class Summoner:
         self.name = name
         self.encrypted_id = encrypted_id
         self.last_game_id = last_game_id
+
 
 def load_summoners():
     """Loads the summoners pickle
@@ -25,6 +26,7 @@ def load_summoners():
         return
     return pickle.load(pickle_file), pickle.load(pickle_file)
 
+
 def update_summoners(summoners_list):
     """Updates the summoners pickle
 
@@ -34,6 +36,7 @@ def update_summoners(summoners_list):
     with open('summoners.pkl', 'wb') as output:
         pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
         pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
+
 
 class SummonersCog(commands.Cog):
 
@@ -59,22 +62,34 @@ class SummonersCog(commands.Cog):
 
     # Add a new Summoner to keep track of
     @commands.command()
-    async def add(self, ctx, name):
+    async def add(self, ctx, *args):
         """Adds a summoner to the tracking list
 
         Args:
             name (String): Name of summoner to add
         """
 
-        response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + name + '?api_key=' + RIOT_KEY)
-        account_info = json.loads(response.text)
-        sumId = account_info['accountId']
-        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + sumId + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-        most_recent_match = json.loads(response.text)
-        game_id = most_recent_match['matches'][0]['gameId']
+        name = " ".join(args[:])
 
         # Retrieving summoner info from pickle
         number_of_sums, summoners_list = load_summoners()
+
+        for s in summoners_list:
+            if s.name == name:
+                await ctx.send(f'**{name}** is already being tracked.')
+                return
+
+        RIOT_KEY = os.getenv('RIOT_KEY')
+        response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + name + '?api_key=' + RIOT_KEY)
+        account_info = json.loads(response.text)
+        try:
+            sumId = account_info['accountId']
+        except:
+            await ctx.send(f'Could not find **{name}**')
+            return
+        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + sumId + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
+        most_recent_match = json.loads(response.text)
+        game_id = most_recent_match['matches'][0]['gameId']
 
         newSum = Summoner(number_of_sums, name, sumId, game_id)
         summoners_list.append(newSum)
@@ -83,14 +98,16 @@ class SummonersCog(commands.Cog):
 
         await ctx.send(f'Added **{name}** to tracking list.')
 
-
+    # Remove a summoner being tracked
     @commands.command()
-    async def remove(self, ctx, name):
+    async def remove(self, ctx, args):
         """Removes a summoner from traking list
 
         Args:
-            name (String): Name of summoner to remove
+            args (String): Name of summoner to remove
         """
+
+        name = " ".join(args[:])
 
         # Retrieving summoner info from pickle
         number_of_sums, summoners_list = load_summoners()
@@ -113,6 +130,7 @@ class SummonersCog(commands.Cog):
             await ctx.send(f'Removed {name} from tracking list.')
             return
         await ctx.send(f'Unable to find {name} in tracking list.')
+
 
 def setup(bot):
     bot.add_cog(SummonersCog(bot))

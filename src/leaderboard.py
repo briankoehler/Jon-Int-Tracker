@@ -18,6 +18,7 @@ class Match:
         self.assists = assists
         self.date = date.today()
 
+
 def load_leaderboard():
     """Reads leaderboard pickle
 
@@ -33,6 +34,7 @@ def load_leaderboard():
         leaderboard_matches.append(new_match)
     return leaderboard_matches
 
+
 def write_leaderboard(matches):
     """Writes matches to the leaderboard pickle
 
@@ -41,6 +43,7 @@ def write_leaderboard(matches):
     """
     with open('leaderboard.pkl', 'wb') as output:
         pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
+
 
 def update_leaderboard(m):
     """Determines whether or not m should be added to leaderboard pickle and does so if necessary
@@ -66,6 +69,7 @@ def update_leaderboard(m):
         del leaderboard_matches[len(leaderboard_matches) - 1]
     write_leaderboard(leaderboard_matches)
 
+
 class LeaderBoardCog(commands.Cog):
     
     def __init__(self, bot):
@@ -83,6 +87,7 @@ class LeaderBoardCog(commands.Cog):
             leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
             num = num + 1
         await ctx.send(leaderboard_string)
+
 
 def setup(bot):
     bot.add_cog(LeaderBoardCog(bot))

@@ -5,17 +5,10 @@ import time
 from datetime import date
 from summoners import Summoner
 from leaderboard import Match
+from bot import Game
 
 response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
 champions = json.loads(response.text)
-
-class Game:
-    def __init__(self, game_id, champion, role, lane, queue):
-        self.game_id = game_id
-        self.champion = champion
-        self.role = role
-        self.lane = lane
-        self.queue = queue
 
 
 def main():
@@ -30,35 +23,35 @@ def main():
     DIFF = input('Enter necessary kill-death difference: ')
 
     # Getting Summoner Names
-    while True:
-        num = int(input('Enter how many people to track: '))
-        if num < 0:
-            print('Please enter a nonnegative integer')
-            continue
-        NUM_OF_INTERS = num
-        break
-    for i in range(NUM_OF_INTERS):
-        summoner = input(f'Enter summoner #{i + 1} name: ')
-        summoners_names_list.append(summoner)
+    # while True:
+    #     num = int(input('Enter how many people to track: '))
+    #     if num < 0:
+    #         print('Please enter a nonnegative integer')
+    #         continue
+    #     NUM_OF_INTERS = num
+    #     break
+    # for i in range(NUM_OF_INTERS):
+    #     summoner = input(f'Enter summoner #{i + 1} name: ')
+    #     summoners_names_list.append(summoner)
 
-    # Retrieving Encyrpted IDs
-    index = 0
-    for s in summoners_names_list:
-        response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + s + '?api_key=' + RIOT_KEY)
-        account_info = json.loads(response.text)
-        sumId = account_info['accountId']
-        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + sumId + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-        most_recent_match = json.loads(response.text)
-        game_id = most_recent_match['matches'][0]['gameId']
-        newSum = Summoner(index, s, sumId, game_id)
-        summoners_list.append(newSum)
-        index = index + 1
-        time.sleep(2)
+    # # Retrieving Encyrpted IDs
+    # index = 0
+    # for s in summoners_names_list:
+    #     response = requests.get(url='https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' + s + '?api_key=' + RIOT_KEY)
+    #     account_info = json.loads(response.text)
+    #     sumId = account_info['accountId']
+    #     response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + sumId + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
+    #     most_recent_match = json.loads(response.text)
+    #     game_id = most_recent_match['matches'][0]['gameId']
+    #     newSum = Summoner(index, s, sumId, game_id)
+    #     summoners_list.append(newSum)
+    #     index = index + 1
+    #     time.sleep(2)
 
-    # Dumping list of summoner objects to pickle file
-    with open('summoners.pkl', 'wb') as output:
-        pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
-        pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
+    # # Dumping list of summoner objects to pickle file
+    # with open('summoners.pkl', 'wb') as output:
+    #     pickle.dump(len(summoners_list), output, pickle.HIGHEST_PROTOCOL)
+    #     pickle.dump(summoners_list, output, pickle.HIGHEST_PROTOCOL)
 
     # Writing .env file
     with open('.env', 'w') as file:
