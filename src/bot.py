@@ -5,7 +5,6 @@ import requests, json
 import dotenv
 from summoners import load_summoners, update_summoners, Summoner
 from leaderboard import update_leaderboard, Match
-from dotenv import load_dotenv
 from discord.ext import tasks, commands
 from datetime import date
 
@@ -138,7 +137,7 @@ async def on_ready():
 
 if __name__ == '__main__':
     # Loading Environemnt Variables
-    load_dotenv()
+    dotenv.load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     CHANNEL = os.getenv('DISCORD_CHANNEL')
     RIOT_KEY = os.getenv('RIOT_KEY')
