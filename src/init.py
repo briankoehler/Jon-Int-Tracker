@@ -38,8 +38,9 @@ def main():
     # Initializing leaderboard file
     matches = []
     for i in range(10):
-        new_match = Match(1, '', -1, -1, -1)
-        matches.append(new_match)
+        # new_match = Match(1, '', -1, -1, -1)
+        # matches.append(new_match)
+        matches.append('')
 
     # Leaderboard Creation
     with open('leaderboard.pkl', 'wb') as output:

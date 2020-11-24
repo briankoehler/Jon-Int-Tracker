@@ -30,8 +30,11 @@ def load_leaderboard():
 
     leaderboard_matches = []
     for match in data:
-        new_match = Match(match.champ_id, match.summoner, match.kills, match.deaths, match.assists)
-        leaderboard_matches.append(new_match)
+        if isinstance(match, Match):
+            new_match = Match(match.champ_id, match.summoner, match.kills, match.deaths, match.assists)
+            leaderboard_matches.append(new_match)
+        else:
+            leaderboard_matches.append('')
     return leaderboard_matches
 
 
@@ -54,7 +57,10 @@ def update_leaderboard(m):
     leaderboard_matches = load_leaderboard()
     updated = False
     i = 0
-    while i < len(leaderboard_matches):
+    while i < len(leaderboard_matches): # TODO: Account for exact same stats
+        if isinstance(leaderboard_matches[i], str):
+            leaderboard_matches[i] = m
+            break
         if m.deaths > leaderboard_matches[i].deaths:
             leaderboard_matches.insert(i, m)
             updated = True
@@ -64,6 +70,11 @@ def update_leaderboard(m):
                 leaderboard_matches.insert(i, m)
                 updated = True
                 break
+            if m.kills == leaderboard_matches[i].kills:
+                if m.assists < leaderboard_matches[i].assists:
+                    leaderboard_matches.insert(i, m)
+                    updated = True
+                    break
         i += 1
     if updated:
         del leaderboard_matches[len(leaderboard_matches) - 1]
@@ -84,7 +95,10 @@ class LeaderBoardCog(commands.Cog):
         leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
         num = 1
         for match in leaderboard_list:
-            leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
+            if isinstance(match, str):
+                leaderboard_string += f'**{num})**\n'
+            else:
+                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
             num = num + 1
         await ctx.send(leaderboard_string)
 

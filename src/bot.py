@@ -120,6 +120,10 @@ async def get_int():
         update_summoners(summoners)
 
 
+@bot.command()
+async def jit(ctx):
+    await ctx.send(f'_ _\n\n?list - View tracking list\n?add <Summoner Name> - Add a summoner to the tracking list\n?remove <Summoner Name> - Remove a summoner from the tracking list\n?leaderboard - Display the Int Leadeboard')
+
 # After deploying...
 @bot.event
 async def on_ready():
