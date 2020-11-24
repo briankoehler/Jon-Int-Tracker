@@ -12,7 +12,7 @@ cd src
 python3 init.py
 ```
 It will prompt you for your Discord API token, your Riot Games API key, your Discord Channel ID, and your desired kill-death difference.  Kill-death difference determines whether or not an update is provided for a game.
-
+# Execution
 Once you want to run the bot:
 ```
 cd src
