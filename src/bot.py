@@ -124,6 +124,10 @@ async def get_int():
 @bot.event
 async def on_ready():
     log(f'{bot.user.name} has connected to Discord!')
+
+    if not os.path.isfile('summoners.pkl'):
+        update_summoners([])
+
     get_int.start()
 
 

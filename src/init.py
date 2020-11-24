@@ -12,6 +12,8 @@ champions = json.loads(response.text)
 
 
 def main():
+    summoners_names_list = []
+    summoners_list = []
 
     # Int Updates
     print('Thank you for using Jon Int Tracker (JIT).\nAnswers to the following questions will be to track inting of a user.')
@@ -36,7 +38,7 @@ def main():
     # Initializing leaderboard file
     matches = []
     for i in range(10):
-        new_match = Match(-1, '', -1, -1, -1)
+        new_match = Match(1, '', -1, -1, -1)
         matches.append(new_match)
 
     # Leaderboard Creation
