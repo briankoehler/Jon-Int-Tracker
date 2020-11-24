@@ -55,11 +55,16 @@ class SummonersCog(commands.Cog):
     async def list(self, ctx):
         """Sends a message with all summoners being tracked"""
 
-        # Initialization
-        summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
-
         # Retrieving summoner info from pickle
         number_of_sums, summoners_list = load_summoners()
+
+        # Checking if any summoners being tracked
+        if number_of_sums == 0:
+            await ctx.send('No summoners being tracked.  Use ?add to add some.')
+            return
+
+        # Initialization
+        summoners_string = '_ _\n\n**SUMMONERS BEING TRACKED**\n--------------------\n'
 
         # Adding Summoner names to string of message to send
         for i in range(number_of_sums):
