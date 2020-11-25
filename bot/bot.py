@@ -33,7 +33,14 @@ def is_int(kills, deaths, assists):
     Returns:
         boolean: True if int, False if not
     """
-    return False
+    def is_int(kills, deaths, assists):
+        if ((kills * 2) + assists) / (deaths * 2) < 1.3 and deaths - kills > 2 and deaths > 3:
+            if deaths < 6 and kills + assists > 3:
+                return False
+            if deaths < 10 and kills > 2 and kills + assists > 7:
+                return False
+            return True
+        return False
 
 
 @tasks.loop(seconds=10)
@@ -103,7 +110,7 @@ async def get_int():
         assists = summoner_stats_info['stats']['assists']
 
         # Sending a Discord message TODO Add more message variation
-        if deaths - kills >= int(DIFF):
+        if is_int(kills, deaths, assists):
             new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
             update_leaderboard(new_leaderboard_match)
             log(f'Sending a Discord message for {summoner.name}...')
@@ -153,7 +160,6 @@ if __name__ == '__main__':
         DISCORD_TOKEN = input('Enter your Discord API token: ')
         DISCORD_CHANNEL = input('Enter your Discord Channel ID: ')
         RIOT_KEY = input('Enter your Riot API key: ')
-        DIFF = input('Enter necessary kill-death difference: ')
 
         # Writing .env file
         with open('.env', 'w') as file:
@@ -161,14 +167,12 @@ if __name__ == '__main__':
             file.write(f'DISCORD_TOKEN="{DISCORD_TOKEN}"\n')
             file.write(f'DISCORD_CHANNEL="{DISCORD_CHANNEL}"\n')
             file.write(f'RIOT_KEY="{RIOT_KEY}"\n')
-            file.write(f'DIFF="{DIFF}"\n')
         
     # Loading Environemnt Variables
     dotenv.load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
     CHANNEL = os.getenv('DISCORD_CHANNEL')
     RIOT_KEY = os.getenv('RIOT_KEY')
-    DIFF = os.getenv('DIFF')
 
     # Loading Champions based on ID
     response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
