@@ -108,11 +108,12 @@ async def get_int():
         kills = summoner_stats_info['stats']['kills']
         deaths = summoner_stats_info['stats']['deaths']
         assists = summoner_stats_info['stats']['assists']
+        
+        new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
+        update_leaderboard(new_leaderboard_match)
 
         # Sending a Discord message TODO Add more message variation
         if is_int(kills, deaths, assists):
-            new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
-            update_leaderboard(new_leaderboard_match)
             log(f'Sending a Discord message for {summoner.name}...')
             channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
