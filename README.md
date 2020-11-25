@@ -5,17 +5,11 @@ I'm still learning how to package Python projects (and Python in general), but i
 ```
 pipenv install
 ```
-
-Run the following before attempting to use the bot:
-```
-cd src
-python3 init.py
-```
-It will prompt you for your Discord API token, your Riot Games API key, your Discord Channel ID, and your desired kill-death difference.  Kill-death difference determines whether or not an update is provided for a game.
 # Execution
 Once you want to run the bot:
 ```
-cd src
+cd bpt
 python3 bot.py
 ```
-Unless you have a permanent Riot Games API key, you will have to update your Riot Games API key every 24 hours with ```init.py```.
+Upon first time running, you will be prompted for your Discord token, Channel ID, Riot Games API key, and a kill-death difference (to determine whether or not an int - will be replaced in the future).
+Unless you have a permanent Riot Games API key, you will have to update your Riot Games API key every 24 hours with within the ```.env``` file.
