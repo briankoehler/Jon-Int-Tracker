@@ -8,7 +8,7 @@ pipenv install
 # Execution
 Once you want to run the bot:
 ```
-cd bpt
+cd bot
 python3 bot.py
 ```
 Upon first time running, you will be prompted for your Discord token, Channel ID, Riot Games API key, and a kill-death difference (to determine whether or not an int - will be replaced in the future).
