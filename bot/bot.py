@@ -43,9 +43,9 @@ def is_int(kills, deaths, assists):
         return False
 
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=20)
 async def get_int():
-    """Every 10s, check most recent match for every summoner int the summoners pickle and determine if it is an int"""
+    """Every 20s, check most recent match for every summoner int the summoners pickle and determine if it is an int"""
 
     log('Executing get_int task...')
 
