@@ -34,14 +34,13 @@ def is_int(kills, deaths, assists):
     Returns:
         boolean: True if int, False if not
     """
-    def is_int(kills, deaths, assists):
-        if ((kills * 2) + assists) / (deaths * 2) < 1.3 and deaths - kills > 2 and deaths > 3:
-            if deaths < 6 and kills + assists > 3:
-                return False
-            if deaths < 10 and kills > 2 and kills + assists > 7:
-                return False
-            return True
-        return False
+    if ((kills * 2) + assists) / (deaths * 2) < 1.3 and deaths - kills > 2 and deaths > 3:
+        if deaths < 6 and kills + assists > 3:
+            return False
+        if deaths < 10 and kills > 2 and kills + assists > 7:
+            return False
+        return True
+    return False
 
 
 @tasks.loop(seconds=20)
