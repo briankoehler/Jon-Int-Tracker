@@ -3,6 +3,8 @@ Discord bot to provide updates when specified summoners have a bad game on Summo
 ## Setup
 I'm still learning how to package Python projects (and Python in general).  Use the following command to get the dependencies.
 ```
+git clone https://github.com/briankoehler/Jon-Int-Tracker/
+cd Jon-Int-Tracker
 pipenv install
 ```
 # Execution
