@@ -84,8 +84,8 @@ async def get_int():
             continue
 
         # Check if a Summoner's Rift
-        # if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-        #     continue
+        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
+            continue
 
         # Make sure not an old game
         LAST_GAME = summoner.last_game_id
