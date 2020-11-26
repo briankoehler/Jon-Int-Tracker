@@ -4,21 +4,8 @@ import datetime, os
 import requests, json
 from discord.ext import commands
 from datetime import date
+from class_def import Summoner, Game
 
-class Summoner:
-    def __init__(self, id, name, encrypted_id, last_game_id):
-        self.id = id
-        self.name = name
-        self.encrypted_id = encrypted_id
-        self.last_game_id = last_game_id
-
-class Game:
-    def __init__(self, game_id, champion, role, lane, queue):
-        self.game_id = game_id
-        self.champion = champion
-        self.role = role
-        self.lane = lane
-        self.queue = queue
 
 def load_summoners():
     """Loads the summoners pickle

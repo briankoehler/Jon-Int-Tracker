@@ -3,8 +3,9 @@ import os, datetime, pickle
 import discord
 import requests, json
 import dotenv
-from summoners import load_summoners, update_summoners, Summoner, Game
-from leaderboard import update_leaderboard, Match
+from summoners import load_summoners, update_summoners
+from leaderboard import update_leaderboard, write_leaderboard
+from class_def import Game, Summoner, Match
 from discord.ext import tasks, commands
 from datetime import date
 
@@ -83,8 +84,8 @@ async def get_int():
             continue
 
         # Check if a Summoner's Rift
-        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-            continue
+        # if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
+        #     continue
 
         # Make sure not an old game
         LAST_GAME = summoner.last_game_id
@@ -92,6 +93,8 @@ async def get_int():
             summoners[summoner.id].last_game_id = rm.game_id
         else:
             continue
+        
+        log(f'Found new game for {summoner.name}')
 
         # Second API Call to check game stats
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
@@ -152,8 +155,7 @@ if __name__ == '__main__':
             matches.append('')
 
         # Leaderboard Creation
-        with open('leaderboard.pkl', 'wb') as output:
-            pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
+        write_leaderboard(matches)
         
     if not os.path.isfile('.env'):
         # Int Updates
