@@ -15,7 +15,7 @@ cd bot
 python3 bot.py
 ```
 Upon first time running, you will be prompted for your Discord token, Channel ID, Riot Games API key, and a kill-death difference (to determine whether or not an int - will be replaced in the future).
-Unless you have a permanent Riot Games API key, you will have to update your Riot Games API key every 24 hours with within the ```.env``` file.
+Unless you have a permanent Riot Games API key, you will have to update your Riot Games API key every 24 hours within the ```.env``` file.
 # Error Getting Match Info
 If tracking many summoners, you will likely need to adjust the time interval of the ```get_int()``` task located inside ```bot/bot.py```.  This is a simple task, and can be done by opening ```bot.py``` and finding the following around line 46:
 ```
