@@ -1,7 +1,7 @@
 # Jon-Int-Tracker
 Discord bot to provide updates when specified summoners have a bad game on Summoner's Rift in League of Legends.  Also creates a leaderboard of the worst games.  Inspiried by my friend Jon, who ints League of Legends games a lot.
 ## Setup
-I'm still learning how to package Python projects (and Python in general).  Use the following command to get the dependencies.
+I'm still learning how to package Python projects (and Python in general).  Use the following command to get the bot and its dependencies.
 ```
 git clone https://github.com/briankoehler/Jon-Int-Tracker/
 cd Jon-Int-Tracker
