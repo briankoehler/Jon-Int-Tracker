@@ -15,14 +15,15 @@ def load_leaderboard():
     leaderboard_file = open('leaderboard.pkl', 'rb')
     data = pickle.load(leaderboard_file)
 
-    leaderboard_matches = []
-    for match in data:
-        if isinstance(match, Match):
-            new_match = Match(match.champ_id, match.summoner, match.kills, match.deaths, match.assists)
-            leaderboard_matches.append(new_match)
-        else:
-            leaderboard_matches.append('')
-    return leaderboard_matches
+    return data
+    #leaderboard_matches = []
+    #for match in data:
+    #    if isinstance(match, Match):
+    #        new_match = Match(match.champ_id, match.summoner, match.kills, match.deaths, match.assists)
+    #        leaderboard_matches.append(new_match)
+    #    else:
+    #        leaderboard_matches.append('')
+    #return leaderboard_matches
 
 
 def write_leaderboard(matches):
