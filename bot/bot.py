@@ -10,8 +10,13 @@ from discord.ext import tasks, commands
 from datetime import date
 
 
+int_messages = [
+    ''
+]
+
+
 # Bot Client
-bot = commands.Bot(command_prefix = '?')
+bot = commands.Bot(command_prefix = '??')
 
 
 def log(message):
@@ -132,9 +137,15 @@ async def get_int():
 
 @bot.command()
 async def jit(ctx):
-    await ctx.send(f'_ _\n\n?list - View tracking list\n?add <Summoner Name> - Add a summoner to the tracking list\n?remove <Summoner Name> - Remove a summoner from the tracking list\n?leaderboard - Display the Int Leadeboard')
+    await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker\n\n?list - View tracking list\n?add <Summoner Name> - Add a summoner to the tracking list\n?remove <Summoner Name> - Remove a summoner from the tracking list\n?leaderboard - Display the Int Leadeboard')
 
-# After deploying...
+
+@bot.event
+async def on_guild_join(guild):
+    bot_entry = await guild.audit_logs(action=discord.AuditLogAction.bot_add).flatten()
+    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit for more info!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
+
+
 @bot.event
 async def on_ready():
     log(f'{bot.user.name} has connected to Discord!')
