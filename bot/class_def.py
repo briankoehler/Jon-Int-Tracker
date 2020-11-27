@@ -4,7 +4,7 @@ from datetime import date
 
 class Match:
     def __init__(self, champ_id, summoner, kills, deaths, assists):
-        response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
+        response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/10.24.1/data/en_US/champion.json')
         champions = json.loads(response.text)
         self.champ_id = champ_id
         for champion in champions['data']:
