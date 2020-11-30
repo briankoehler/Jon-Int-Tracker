@@ -10,11 +10,6 @@ from discord.ext import tasks, commands
 from datetime import date
 
 
-int_messages = [
-    ''
-]
-
-
 # Bot Client
 bot = commands.Bot(command_prefix = '??')
 
@@ -39,6 +34,9 @@ def is_int(kills, deaths, assists):
     Returns:
         boolean: True if int, False if not
     """
+    if deaths == 0:
+        return False
+    
     if ((kills * 2) + assists) / (deaths * 2) < 1.3 and deaths - kills > 2 and deaths > 3:
         if deaths < 6 and kills + assists > 3:
             return False
@@ -116,13 +114,16 @@ async def get_int():
         deaths = summoner_stats_info['stats']['deaths']
         assists = summoner_stats_info['stats']['assists']
         
+        # Updating leaderboard if necessary
         new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
-        update_leaderboard(new_leaderboard_match)
+        update_index = update_leaderboard(new_leaderboard_match)
+        
+        # Gettinc channel to message
+        channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
 
         # Sending a Discord message TODO Add more message variation
         if is_int(kills, deaths, assists):
             log(f'Sending a Discord message for {summoner.name}...')
-            channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
             if deaths > 19:
                 msg = f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??'
             elif deaths > 14:
@@ -130,6 +131,10 @@ async def get_int():
             else:
                 msg = f'{summoner.name} just died **{str(deaths)} times!** Wow!'
             await channel.send(msg)
+            
+            # Sending leaderboard message if necessary
+            if update_index != -1:
+                await channel.send(f'This is now **#{update_index}** on the int leaderboard!')
 
         # Updating Pickle File
         update_summoners(summoners)
@@ -170,7 +175,7 @@ if __name__ == '__main__':
     if not os.path.isfile('.env'):
         # Int Updates
         print('Thank you for using Jon Int Tracker (JIT).\nPlease provide the following details to setup the bot.  You can always change the .env file manually afterwards.')
-        DISCORD_TOKEN = input('Enter your Discord API token: ')
+        DISCORD_TOKEN = input('Enter your Discord bot token: ')
         DISCORD_CHANNEL = input('Enter your Discord Channel ID: ')
         RIOT_KEY = input('Enter your Riot API key: ')
 
@@ -186,10 +191,6 @@ if __name__ == '__main__':
     TOKEN = os.getenv('DISCORD_TOKEN')
     CHANNEL = os.getenv('DISCORD_CHANNEL')
     RIOT_KEY = os.getenv('RIOT_KEY')
-
-    # Loading Champions based on ID
-    response = requests.get(url='http://ddragon.leagueoflegends.com/cdn/6.24.1/data/en_US/champion.json')
-    champions = json.loads(response.text)
 
     bot.load_extension("summoners")
     bot.load_extension("leaderboard")
