@@ -144,10 +144,11 @@ async def get_int():
 
 @bot.command()
 async def here(ctx):
-    new_id = ctx.id
+    new_id = ctx.channel.id
     dotenv_file = dotenv.find_dotenv()
-    os.environ['CHANNEL'] = new_id
-    dotenv.set_key(dotenv_file, 'CHANNEL', os.environ['CHANNEL'])
+    os.environ['DISCORD_CHANNEL'] = str(new_id)
+    CHANNEL = CHANNEL = os.getenv('DISCORD_CHANNEL')
+    dotenv.set_key(dotenv_file, 'DISCORD_CHANNEL', os.environ['DISCORD_CHANNEL'])
     await ctx.send(f'Set the notification channel to channel with ID: {new_id}')
 
 
