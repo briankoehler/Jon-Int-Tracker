@@ -119,6 +119,8 @@ async def get_int():
         update_index = update_leaderboard(new_leaderboard_match)
         
         # Gettinc channel to message
+        if CHANNEL == '':
+            return
         channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
 
         # Sending a Discord message TODO Add more message variation
@@ -141,14 +143,28 @@ async def get_int():
 
 
 @bot.command()
+async def here(ctx):
+    new_id = ctx.id
+    dotenv_file = dotenv.find_dotenv()
+    os.environ['CHANNEL'] = new_id
+    dotenv.set_key(dotenv_file, 'CHANNEL', os.environ['CHANNEL'])
+    await ctx.send(f'Set the notification channel to channel with ID: {new_id}')
+
+
+@bot.command()
 async def jit(ctx):
-    await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker\n\n?list - View tracking list\n?add <Summoner Name> - Add a summoner to the tracking list\n?remove <Summoner Name> - Remove a summoner from the tracking list\n?leaderboard - Display the Int Leadeboard')
+    await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker\n\n' \
+        '?list - View tracking list\n' \
+        '?here - Sets the notification channel to wherever this is sent\n' \
+        '?add <Summoner Name> - Add a summoner to the tracking list\n' \
+        '?remove <Summoner Name> - Remove a summoner from the tracking list\n' \
+        '?leaderboard - Display the Int Leadeboard')
 
 
 @bot.event
 async def on_guild_join(guild):
     bot_entry = await guild.audit_logs(action=discord.AuditLogAction.bot_add).flatten()
-    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit for more info!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
+    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit to get started!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
 
 
 @bot.event
@@ -176,14 +192,14 @@ if __name__ == '__main__':
         # Int Updates
         print('Thank you for using Jon Int Tracker (JIT).\nPlease provide the following details to setup the bot.  You can always change the .env file manually afterwards.')
         DISCORD_TOKEN = input('Enter your Discord bot token: ')
-        DISCORD_CHANNEL = input('Enter your Discord Channel ID: ')
+        # DISCORD_CHANNEL = input('Enter your Discord Channel ID: ')
         RIOT_KEY = input('Enter your Riot API key: ')
 
         # Writing .env file
         with open('.env', 'w') as file:
             file.write('# .env\n\n')
             file.write(f'DISCORD_TOKEN="{DISCORD_TOKEN}"\n')
-            file.write(f'DISCORD_CHANNEL="{DISCORD_CHANNEL}"\n')
+            file.write(f'DISCORD_CHANNEL=""\n')
             file.write(f'RIOT_KEY="{RIOT_KEY}"\n')
         
     # Loading Environemnt Variables
