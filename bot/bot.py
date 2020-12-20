@@ -40,7 +40,7 @@ int_messages = {
 
 
 # Bot Client
-bot = commands.Bot(command_prefix = '??')
+bot = commands.Bot(command_prefix = '?')
 
 
 def log(message):
