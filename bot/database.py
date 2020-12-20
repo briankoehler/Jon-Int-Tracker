@@ -63,9 +63,17 @@ def create_summoners_table():
     
     c.execute('''
               CREATE TABLE summoners(
-                  id INTEGER PRIMARY KEY,
+                  encrypted_id TEXT PRIMARY KEY,
                   name TEXT NOT NULL,
-                  encrypted_id TEXT NOT NULL,
-                  last_game_id INTEGER CHECK(last_game_id > 0)
+                  last_game_id TEXT NOT NULL
               );
+              ''')
+    
+def add_summoner():
+    conn = sqlite3.connect('jit.db')
+    c = conn.cursor()
+    
+    c.execute('''
+              INSERT INTO summoners
+              VALUES (?, ?, ?);
               ''')
