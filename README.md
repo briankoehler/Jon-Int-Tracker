@@ -24,5 +24,7 @@ If tracking many summoners, you will likely need to adjust the time interval of 
 Simply change the 20 to a higher number (such as 25) and you will have no issues.  You can also reduce the number if desired.
 # Planned Features
 * Total stats per summoner
-* More leaderboards
+* More leaderboard types
 * More "poor game" message formats
+* SQLite3 storage
+* Multi-Server management
