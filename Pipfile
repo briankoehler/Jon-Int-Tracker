@@ -9,6 +9,7 @@ verify_ssl = true
 requests = "*"
 discord = "*"
 python-dotenv = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.8"
