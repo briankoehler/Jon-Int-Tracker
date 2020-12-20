@@ -55,7 +55,7 @@ class SummonersCog(commands.Cog):
 
         # Adding Summoner names to string of message to send
         for i in range(number_of_sums):
-            summoners_string += f'• {summoners_list[i].name} (ID: {summoners_list[i].id})\n'
+            summoners_string += f'• {summoners_list[i].name}\n'
         await ctx.send(summoners_string)
 
 
@@ -90,7 +90,7 @@ class SummonersCog(commands.Cog):
         most_recent_match = json.loads(response.text)
         game_id = most_recent_match['matches'][0]['gameId']
 
-        newSum = Summoner(number_of_sums, name, sumId, game_id)
+        newSum = Summoner(name, sumId, game_id)
         summoners_list.append(newSum)
         # Dumping list of summoner objects to pickle file
         update_summoners(summoners_list)
@@ -110,17 +110,12 @@ class SummonersCog(commands.Cog):
 
         # Retrieving summoner info from pickle
         number_of_sums, summoners_list = load_summoners()
-
+        
         found = False
-        i = 0
-        while i < len(summoners_list):
-            if summoners_list[i].name == name:
+        for i, summoner in enumerate(summoners_list):
+            if summoner.name == name:
                 found = True
                 del summoners_list[i]
-                i -= 1
-            elif found:
-                summoners_list[i].id -= 1
-            i += 1
 
         # Dumping list of summoner objects to pickle file
         update_summoners(summoners_list)

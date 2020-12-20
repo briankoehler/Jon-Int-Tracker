@@ -32,8 +32,7 @@ class Match:
         self.date = date.today()
         
 class Summoner:
-    def __init__(self, id, name, encrypted_id, last_game_id):
-        self.id = id
+    def __init__(self, name, encrypted_id, last_game_id):
         self.name = name
         self.encrypted_id = encrypted_id
         self.last_game_id = last_game_id

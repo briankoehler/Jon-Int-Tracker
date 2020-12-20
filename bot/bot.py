@@ -85,15 +85,10 @@ async def get_int():
     summoners = []
 
     # Retrieving summoner info from pickle
-    number_of_sums, summoners_list = load_summoners()
+    number_of_sums, summoners = load_summoners()
 
-    # Adding Summoner objects to list
-    for i in range(number_of_sums):
-        
-        newSum = Summoner(i, summoners_list[i].name, summoners_list[i].encrypted_id, summoners_list[i].last_game_id)
-        summoners.append(newSum)
-
-    for summoner in summoners:
+    # Checking each summoner's recent game
+    for i, summoner in enumerate(summoners):
 
         # API Call
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.encrypted_id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
@@ -121,7 +116,7 @@ async def get_int():
         # Make sure not an old game
         LAST_GAME = summoner.last_game_id
         if str(rm.game_id) != str(LAST_GAME):
-            summoners[summoner.id].last_game_id = rm.game_id
+            summoners[i].last_game_id = rm.game_id
         else:
             continue
         
@@ -174,7 +169,7 @@ async def get_int():
             await channel.send(msg)
             
             # Sending leaderboard message if necessary
-            if update_index != -1:
+            if update_index != 0:
                 await channel.send(f'This is now **#{update_index}** on the int leaderboard!')
 
         # Updating Pickle File
