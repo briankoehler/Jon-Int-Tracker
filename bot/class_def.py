@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 class Match:
-    def __init__(self, champ_id, summoner, kills, deaths, assists):
+    def __init__(self, game_id, champ_id, summoner, kills, deaths, assists):
         
         page = requests.get('https://leagueoflegends.fandom.com/wiki/Patch')
         soup = BeautifulSoup(page.content, 'html.parser')
@@ -18,10 +18,13 @@ class Match:
         
         response = requests.get(url=f'http://ddragon.leagueoflegends.com/cdn/{patch}/data/en_US/champion.json')
         champions = json.loads(response.text)
+        
         self.champ_id = champ_id
         for champion in champions['data']:
             if champions['data'][champion]['key'] == str(champ_id):
                 self.champ = champion
+                
+        self.game_id = game_id
         self.summoner = summoner
         self.kills = kills
         self.deaths = deaths

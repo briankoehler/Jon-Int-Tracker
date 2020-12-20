@@ -83,7 +83,7 @@ class LeaderBoardCog(commands.Cog):
             if isinstance(match, str):
                 leaderboard_string += f'**{num})**\n'
             else:
-                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n'
+                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n_ _\n_ _'
             num = num + 1
         await ctx.send(leaderboard_string)
 

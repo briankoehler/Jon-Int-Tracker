@@ -1,5 +1,5 @@
 # bot.py
-import os, datetime, pickle
+import os, datetime, pickle, random
 import discord
 import requests, json
 import dotenv
@@ -8,6 +8,35 @@ from leaderboard import update_leaderboard, write_leaderboard
 from class_def import Game, Summoner, Match
 from discord.ext import tasks, commands
 from datetime import date
+
+# ?s? = Summoner name
+# ?S? = All caps Summoner name
+# ?d? = # of deaths
+# ?k? = # of kills
+# ?a? = # of assists
+int_messages = {
+    'standard': [ # 0-10
+        '?s? just died **?d? times!** Wow!',
+        '**?k?/?d?/?a?** game coming from ?s?.  Nice.',
+        'Oof, **?k?/?d?/?a?** by ?s?. What OP score would that even be??',
+        'What a game by ?s?! **?d? deaths and ?k? kills!**',
+        'Yikes, **?d? deaths** and only ?k? kills for ?s? that last match.'
+    ],
+    'heavy': [ # 10-14
+        '**NEWS FLASH:** ?S? DROPS A **?d? DEATH** GAME',
+        'Damn, ?s? really died **?d? times** in one game.',
+        'WOW!  **?d? deaths** by ?s? in this int-heavy game!',
+        'Holy moly - **?d? DEATHS** BY ?S?!!'
+    ],
+    'turbo': [ # 15-19
+        'Get **shit** on ?s?! Suck my dick! **?d?**',
+        '**BREAKING NEWS:** ?S? INTS ANOTHER GAME WITH **?d? DEATHS**',
+        '**HOLY SMOKES!** ?s? just gifted us **?d? deaths!**'
+    ],
+    'turbo-mega': [ # 20+
+        'Incredible.  Once in a blue moon.  A **?d? death* game by ?s?.  We all all honored, ?s?.'
+    ]
+}
 
 
 # Bot Client
@@ -115,7 +144,7 @@ async def get_int():
         assists = summoner_stats_info['stats']['assists']
         
         # Updating leaderboard if necessary
-        new_leaderboard_match = Match(rm.champion, summoner.name, kills, deaths, assists)
+        new_leaderboard_match = Match(rm.game_id, rm.champion, summoner.name, kills, deaths, assists)
         update_index = update_leaderboard(new_leaderboard_match)
         
         # Gettinc channel to message
@@ -123,15 +152,25 @@ async def get_int():
             return
         channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
 
-        # Sending a Discord message TODO Add more message variation
+        # Sending a Discord message based on number of deaths
         if is_int(kills, deaths, assists):
             log(f'Sending a Discord message for {summoner.name}...')
-            if deaths > 19:
-                msg = f'{summoner.name} just had a **TURBO** int with **{str(deaths)} deaths!** Could he get banned for this??'
-            elif deaths > 14:
-                msg = f'**{str(deaths)} deaths** this game for {summoner.name}? Was he even trying?'
+            if deaths >= 20:
+                msg = random.choice(int_messages['turbo-mega'])
+            elif deaths >= 15:
+                msg = random.choice(int_messages['turbo'])
+            elif deaths >= 10:
+                msg = random.choice(int_messages['heavy'])
             else:
-                msg = f'{summoner.name} just died **{str(deaths)} times!** Wow!'
+                msg = random.choice(int_messages['standard'])
+                
+            # Replacing variables in template
+            msg = msg.replace('?s?', summoner.name)
+            msg = msg.replace('?S?', summoner.name.upper())
+            msg = msg.replace('?d?', str(deaths))
+            msg = msg.replace('?k?', str(kills))
+            msg = msg.replace('?a?', str(assists))
+            
             await channel.send(msg)
             
             # Sending leaderboard message if necessary
@@ -144,16 +183,31 @@ async def get_int():
 
 @bot.command()
 async def here(ctx):
+    """Sets the notification channel to where this is sent
+
+    Args:
+        ctx (Context): Context of command
+    """
+    # Getting channel id and name
     new_id = ctx.channel.id
+    new_name = ctx.channel.name
+    
+    # Updating environment variable
     dotenv_file = dotenv.find_dotenv()
     os.environ['DISCORD_CHANNEL'] = str(new_id)
     CHANNEL = CHANNEL = os.getenv('DISCORD_CHANNEL')
     dotenv.set_key(dotenv_file, 'DISCORD_CHANNEL', os.environ['DISCORD_CHANNEL'])
-    await ctx.send(f'Set the notification channel to channel with ID: {new_id}')
+    
+    await ctx.send(f'Set the notification channel to {new_name} (ID: {new_id})')
 
 
 @bot.command()
 async def jit(ctx):
+    """Sends a short about message and a list of commands
+
+    Args:
+        ctx (Context): Context of command
+    """
     await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker\n\n' \
         '?list - View tracking list\n' \
         '?here - Sets the notification channel to wherever this is sent\n' \
@@ -164,8 +218,13 @@ async def jit(ctx):
 
 @bot.event
 async def on_guild_join(guild):
+    """Sends a message to whoever invited the bot
+
+    Args:
+        guild (Guild): Guild object of joined guild
+    """
     bot_entry = await guild.audit_logs(action=discord.AuditLogAction.bot_add).flatten()
-    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit to get started!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
+    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit command to get started!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
 
 
 @bot.event
