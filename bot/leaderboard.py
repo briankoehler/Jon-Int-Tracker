@@ -63,7 +63,7 @@ def update_leaderboard(m):
     if updated:
         del leaderboard_matches[len(leaderboard_matches) - 1]
     write_leaderboard(leaderboard_matches)
-    return update_index
+    return update_index + 1
 
 
 class LeaderBoardCog(commands.Cog):
@@ -83,7 +83,7 @@ class LeaderBoardCog(commands.Cog):
             if isinstance(match, str):
                 leaderboard_string += f'**{num})**\n'
             else:
-                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n_ _\n_ _'
+                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n_ _'
             num = num + 1
         await ctx.send(leaderboard_string)
 

@@ -1,4 +1,5 @@
 .env
+*.db
 notes.txt
 __pycache__/
 *.pkl
