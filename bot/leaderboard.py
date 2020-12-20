@@ -35,35 +35,35 @@ def update_leaderboard(m):
     """
     leaderboard_matches = load_leaderboard()
     updated = False
-    i = 0
     update_index = -1
-    while i < len(leaderboard_matches): # TODO: Account for exact same stats (or just leave as is)
-        if isinstance(leaderboard_matches[i], str):
+    for i, match in enumerate(leaderboard_matches):
+        if isinstance(match, str):
             leaderboard_matches[i] = m
             update_index = i
             break
-        if m.deaths > leaderboard_matches[i].deaths:
+        if m.deaths > match.deaths:
             leaderboard_matches.insert(i, m)
             updated = True
             update_index = i
             break
-        if m.deaths == leaderboard_matches[i].deaths:
+        if m.deaths == match.deaths:
             if m.kills < leaderboard_matches[i].kills:
                 leaderboard_matches.insert(i, m)
                 updated = True
                 update_index = i
                 break
-            if m.kills == leaderboard_matches[i].kills:
-                if m.assists < leaderboard_matches[i].assists:
+            if m.kills == match.kills:
+                if m.assists < match.assists:
                     leaderboard_matches.insert(i, m)
                     updated = True
                     update_index = i
                     break
-        i += 1
+
     if updated:
         del leaderboard_matches[len(leaderboard_matches) - 1]
+        
     write_leaderboard(leaderboard_matches)
-    return update_index
+    return update_index + 1
 
 
 class LeaderBoardCog(commands.Cog):
