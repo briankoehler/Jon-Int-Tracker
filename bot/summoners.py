@@ -1,5 +1,5 @@
 # summoners.py
-import pickle
+import pickle, logging
 import datetime, os
 import requests, json
 from discord.ext import commands
@@ -16,7 +16,7 @@ def load_summoners():
     try:
         pickle_file = open('summoners.pkl', 'rb')
     except:
-        print(f'[{datetime.datetime.now()}] Summoners file not found...')
+        logging.error(f'Summoners file not found...')
         return
     return pickle.load(pickle_file), pickle.load(pickle_file)
 

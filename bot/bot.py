@@ -1,5 +1,5 @@
 # bot.py
-import os, datetime, pickle, random
+import os, datetime, pickle, random, logging
 import discord
 import requests, json
 import dotenv
@@ -43,15 +43,6 @@ int_messages = {
 bot = commands.Bot(command_prefix = '??')
 
 
-def log(message):
-    """Prints a message to the console with date/time
-
-    Args:
-        message (String): Message to print
-    """
-    print(f'[{datetime.datetime.now()}] {message}')
-
-
 def is_int(kills, deaths, assists):
     """Determines whether or not a match with given kda is an "int"
 
@@ -79,7 +70,7 @@ def is_int(kills, deaths, assists):
 async def get_int():
     """Every 20s, check most recent match for every summoner int the summoners pickle and determine if it is an int"""
 
-    log('Executing get_int task...')
+    logging.info('Executing get_int task')
 
     # Initialization
     summoners = []
@@ -106,7 +97,7 @@ async def get_int():
             if rm.lane == 'MID':
                 rm.lane = 'MIDDLE'
         except:
-            log(f'Error getting match info for {summoner.name}...')
+            logging.error(f'Error getting match info for {summoner.name}...')
             continue
 
         # Check if a Summoner's Rift
@@ -120,7 +111,7 @@ async def get_int():
         else:
             continue
         
-        log(f'Found new game for {summoner.name}')
+        logging.info(f'Found new game for {summoner.name}')
 
         # Second API Call to check game stats
         response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
@@ -149,7 +140,7 @@ async def get_int():
 
         # Sending a Discord message based on number of deaths
         if is_int(kills, deaths, assists):
-            log(f'Sending a Discord message for {summoner.name}...')
+            logging.info(f'Sending a Discord message for {summoner.name}...')
             if deaths >= 20:
                 msg = random.choice(int_messages['turbo-mega'])
             elif deaths >= 15:
@@ -224,16 +215,20 @@ async def on_guild_join(guild):
 
 @bot.event
 async def on_ready():
-    log(f'{bot.user.name} has connected to Discord!')
-
+    logging.info(f'{bot.user.name} has connected to Discord!')
     get_int.start()
 
 
 if __name__ == '__main__':
     
+    # Logging configuration
+    logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.DEBUG, filename='test.log')
+    
+    # Checking if summoners pickle exists
     if not os.path.isfile('summoners.pkl'):
         update_summoners([])
         
+    # Checking if leaderboard pickle exists
     if not os.path.isfile('leaderboard.pkl'):
         # Initializing leaderboard file
         matches = []
