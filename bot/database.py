@@ -14,8 +14,8 @@ def create_int_table():
     
     c.execute('''
               CREATE TABLE ints(
-                  guild_id INTEGER NOT NULL,
-                  match_id INTEGER NOT NULL,
+                  guild_id TEXT NOT NULL,
+                  match_id TEXT NOT NULL,
                   champ TEXT NOT NULL,
                   summoner_name TEXT NOT NULL,
                   kills INTEGER CHECK(kills > -1),
@@ -65,15 +65,31 @@ def create_summoners_table():
               CREATE TABLE summoners(
                   encrypted_id TEXT PRIMARY KEY,
                   name TEXT NOT NULL,
-                  last_game_id TEXT NOT NULL
+                  last_game_id TEXT NOT NULL,
+                  guild_id TEXT NOT NULL
               );
               ''')
     
-def add_summoner():
+    
+def add_summoner(guild_id, summoner):
     conn = sqlite3.connect('jit.db')
     c = conn.cursor()
+    
+    data = (summoner.encrypted_id, summoner.name, summoner.last_game_id, guild_id)
     
     c.execute('''
               INSERT INTO summoners
               VALUES (?, ?, ?);
-              ''')
+              ''', data)
+    
+    
+def get_summoners(guild_id):
+    conn = sqlite3.connect('jit.db')
+    c = conn.cursor()
+    
+    c.execute('''
+              SELECT * FROM summoners WHERE guild_id = ?
+              ''', (guild_id,))
+    
+    summoners = c.fetchall()
+    return summoners
