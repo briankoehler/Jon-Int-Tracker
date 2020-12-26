@@ -68,7 +68,7 @@ def get_top_ints(guild):
         return []
 
 
-def create_summoners_table():
+def create_summoner_table():
     conn = sqlite3.connect('jit.db')
     c = conn.cursor()
     
@@ -85,6 +85,22 @@ def create_summoners_table():
         
     except:
         return False
+    
+
+def get_summoners(guild):
+    conn = sqlite3.connect('jit.db')
+    c = conn.cursor()
+    
+    try:
+        c.execute('''
+                SELECT * FROM summoner WHERE guild = ?
+                ''', (guild,))
+        
+        summoners = c.fetchall()
+        return summoners
+    
+    except:
+        return []
     
     
 def add_summoner(guild, summoner):
@@ -103,21 +119,6 @@ def add_summoner(guild, summoner):
     except:
         return False
     
-    
-def get_summoners(guild):
-    conn = sqlite3.connect('jit.db')
-    c = conn.cursor()
-    
-    try:
-        c.execute('''
-                SELECT * FROM summoner WHERE guild = ?
-                ''', (guild,))
-        
-        summoners = c.fetchall()
-        return summoners
-    
-    except:
-        return []
 
 def remove_summoner(guild, name):
     conn = sqlite3.connect('jit.db')
