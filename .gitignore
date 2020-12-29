@@ -1,7 +1,4 @@
 .env
 *.db
-notes.txt
+*.log
 __pycache__/
-*.pkl
-test.py
-test2.py

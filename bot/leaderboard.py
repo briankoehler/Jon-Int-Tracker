@@ -1,90 +1,34 @@
 # leaderboard.py
-import pickle
-import requests, json
-from datetime import date
+import database
 from discord.ext import commands
-from class_def import Match
-
-
-def load_leaderboard():
-    """Reads leaderboard pickle
-
-    Returns:
-        List: Contains the top 10 int matches
-    """
-    leaderboard_file = open('leaderboard.pkl', 'rb')
-    data = pickle.load(leaderboard_file)
-    return data
-
-
-def write_leaderboard(matches):
-    """Writes matches to the leaderboard pickle
-
-    Args:
-        matches (List): Contains new top 10 int matches
-    """
-    with open('leaderboard.pkl', 'wb') as output:
-        pickle.dump(matches, output, pickle.HIGHEST_PROTOCOL)
-
-
-def update_leaderboard(m):
-    """Determines whether or not m should be added to leaderboard pickle and does so if necessary
-
-    Args:
-        m (Match): Pending match that may be added to learboard pickle
-    """
-    leaderboard_matches = load_leaderboard()
-    updated = False
-    update_index = -1
-    for i, match in enumerate(leaderboard_matches):
-        if isinstance(match, str):
-            leaderboard_matches[i] = m
-            update_index = i
-            break
-        if m.deaths > match.deaths:
-            leaderboard_matches.insert(i, m)
-            updated = True
-            update_index = i
-            break
-        if m.deaths == match.deaths:
-            if m.kills < leaderboard_matches[i].kills:
-                leaderboard_matches.insert(i, m)
-                updated = True
-                update_index = i
-                break
-            if m.kills == match.kills:
-                if m.assists < match.assists:
-                    leaderboard_matches.insert(i, m)
-                    updated = True
-                    update_index = i
-                    break
-
-    if updated:
-        del leaderboard_matches[len(leaderboard_matches) - 1]
-        
-    write_leaderboard(leaderboard_matches)
-    return update_index + 1
 
 
 class LeaderBoardCog(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot
-    
+
+
     # Leaderboard Command
     @commands.command()
     async def leaderboard(self, ctx):
         """Sends a message with the top 10 int matches"""
 
-        leaderboard_list = load_leaderboard()
+        # Query database and get a tuple
+        top_ints = database.get_top_ints(ctx.guild.id)
+
+        # Formulating leaderboard message
         leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
-        num = 1
-        for match in leaderboard_list:
-            if isinstance(match, str):
-                leaderboard_string += f'**{num})**\n'
-            else:
-                leaderboard_string += f'**{num})** {match.kills}/{match.deaths}/{match.assists} - {match.summoner} ({match.champ})\n_ _'
-            num = num + 1
+        i = 0
+        for i, match in enumerate(top_ints):
+            leaderboard_string += f'**{i + 1})** {match[5]}/{match[6]}/{match[7]} - {match[3]} ({match[4]})\n_ _' # k/d/a - summoner (champion)
+
+        # Adding any blank lines
+        if i + 1 != 10:
+            while i != 10:
+                leaderboard_string += f'**{i + 1})**\n'
+                i += 1
+
         await ctx.send(leaderboard_string)
 
 
