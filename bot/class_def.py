@@ -1,7 +1,4 @@
 # class_def.py
-import requests, json
-from bs4 import BeautifulSoup
-from datetime import date
 
 class Match:
         

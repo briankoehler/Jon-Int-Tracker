@@ -1,10 +1,8 @@
 # summoners.py
-import pickle, logging
 import datetime, os
 import requests, json
-import database
+from database import get_summoners, add_summoner, remove_summoner
 from discord.ext import commands
-from datetime import date
 from class_def import Summoner
 
 
@@ -19,7 +17,7 @@ class SummonersCog(commands.Cog):
         """Sends a message with all summoners being tracked"""
 
         # Retrieving summoners from database
-        summoners = database.get_summoners(ctx.guild.id)
+        summoners = get_summoners(ctx.guild.id)
 
         # Checking if any summoners being tracked
         if len(summoners) == 0:
@@ -61,7 +59,7 @@ class SummonersCog(commands.Cog):
         game_id = most_recent_match['matches'][0]['gameId']
 
         # Check if account already in database
-        database_summoners = database.get_summoners(ctx.guild.id)
+        database_summoners = get_summoners(ctx.guild.id)
         for s in database_summoners:
             if s[1] == sum_id:
                 await ctx.send(f'**{name}** is already being tracked.')
@@ -69,7 +67,7 @@ class SummonersCog(commands.Cog):
             
         # Adding to database
         new_sum = Summoner(sum_id, name, game_id)
-        database.add_summoner(ctx.guild.id, new_sum)
+        add_summoner(ctx.guild.id, new_sum)
 
         await ctx.send(f'Added **{name}** to tracking list.')
 
@@ -86,7 +84,7 @@ class SummonersCog(commands.Cog):
         name = " ".join(args[:])
 
         # Removing from database
-        did_remove = database.remove_summoner(ctx.guild.id, name)
+        did_remove = remove_summoner(ctx.guild.id, name)
 
         if did_remove:
             await ctx.send(f'Removed **{name}** from tracking list.')

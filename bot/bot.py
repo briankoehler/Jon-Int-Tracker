@@ -1,5 +1,5 @@
 # bot.py
-import os, datetime, pickle, random, logging
+import os, random, logging
 import discord
 import requests, json
 import dotenv
@@ -7,7 +7,6 @@ import database
 from class_def import Summoner, Match
 from bs4 import BeautifulSoup
 from discord.ext import tasks, commands
-from datetime import date
 
 
 # ?s? = Summoner name

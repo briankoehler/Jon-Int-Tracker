@@ -1,5 +1,6 @@
 # leaderboard.py
-import database
+from class_def import Match
+from database import get_top_ints
 from discord.ext import commands
 
 
@@ -15,7 +16,7 @@ class LeaderBoardCog(commands.Cog):
         """Sends a message with the top 10 int matches"""
 
         # Query database and get a tuple
-        top_ints = database.get_top_ints(ctx.guild.id)
+        top_ints = get_top_ints(ctx.guild.id)
 
         # Formulating leaderboard message
         leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
