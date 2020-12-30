@@ -28,7 +28,7 @@ def create_match_table():
                     champ TEXT NOT NULL,
                     kills INTEGER CHECK(kills > -1),
                     deaths INTEGER CHECK(deaths > -1),
-                    assists INTEGER CHECK(deaths > -1),
+                    assists INTEGER CHECK(deaths > -1)
                 );
                 ''')
         return True
