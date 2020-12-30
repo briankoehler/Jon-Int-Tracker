@@ -76,22 +76,22 @@ def get_champ_from_id(id):
     Returns:
         str: Champion's name
     """
-        page = requests.get('https://leagueoflegends.fandom.com/wiki/Patch')
-        soup = BeautifulSoup(page.content, 'html.parser')
-        
-        wikitable = soup.find_all('table', class_='wikitable')
-        wikitable = wikitable[0]
-        patch = wikitable.find_all('a')
-        patch = patch[0]
-        patch = patch.text
-        patch = patch + '.1'
-        
-        response = requests.get(url=f'http://ddragon.leagueoflegends.com/cdn/{patch}/data/en_US/champion.json')
-        champions = json.loads(response.text)
-        
-        for champion in champions['data']:
-            if champions['data'][champion]['key'] == str(id):
-                return champion
+    page = requests.get('https://leagueoflegends.fandom.com/wiki/Patch')
+    soup = BeautifulSoup(page.content, 'html.parser')
+    
+    wikitable = soup.find_all('table', class_='wikitable')
+    wikitable = wikitable[0]
+    patch = wikitable.find_all('a')
+    patch = patch[0]
+    patch = patch.text
+    patch = patch + '.1'
+    
+    response = requests.get(url=f'http://ddragon.leagueoflegends.com/cdn/{patch}/data/en_US/champion.json')
+    champions = json.loads(response.text)
+    
+    for champion in champions['data']:
+        if champions['data'][champion]['key'] == str(id):
+            return champion
 
 
 @tasks.loop(seconds=20)
@@ -105,7 +105,6 @@ async def get_int():
 
         # Retrieving summoners list from database TODO: do by all guilds
         summoners_tuples = database.get_summoners(g[0])
-        print(summoners_tuples)
         
         # Initialization
         summoners = []
@@ -127,7 +126,7 @@ async def get_int():
                                 summoner.name,
                                 get_champ_from_id(most_recent_match['matches'][0]['champion']),
                                 most_recent_match['matches'][0]['role'], 
-                                'MID' if most_recent_match['matches'][0]['lane'] == 'MIDDLE' else most_recent_match['matches'][0]['lane'], 
+                                'MIDDLE' if most_recent_match['matches'][0]['lane'] == 'MID' else most_recent_match['matches'][0]['lane'], 
                                 most_recent_match['matches'][0]['queue'])
 
             except:
@@ -135,7 +134,7 @@ async def get_int():
                 continue
 
             # Check if a Summoner's Rift
-            if match_info.queue not in set(400, 420, 440, 700): # Draft, Solo, Flex, Clash
+            if match_info.queue not in set((400, 420, 440, 700)): # Draft, Solo, Flex, Clash
                 continue
 
             # Make sure not an old game

@@ -20,7 +20,7 @@ def create_match_table():
                 CREATE TABLE match(
                     guild TEXT NOT NULL,
                     id TEXT NOT NULL,
-                    duration INTEGER CHECK(duration > -1),
+                    duration INTEGER CHECK(duration > -1)
                     date INTEGER CHECK(date > 0)
                     summoner TEXT NOT NULL,
                     champ TEXT NOT NULL,
@@ -49,12 +49,12 @@ def add_match(guild, match):
     conn = sqlite3.connect('jit.db')
     c = conn.cursor()
     
-    data = (guild, match.id, match.duration, match.date, match.summoner, match.champ, match.kills, match.deaths, match.assists)
+    data = (guild, match.id, match.duration, match.summoner, match.champ, match.kills, match.deaths, match.assists, match.date,)
     
     try:
         c.execute(f''' 
                   INSERT INTO match
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                   ''', data)
         
         conn.commit()
