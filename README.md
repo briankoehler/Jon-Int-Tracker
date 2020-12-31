@@ -1,6 +1,8 @@
 # Jon-Int-Tracker
 Discord bot to provide updates when a dynamic list of specified summoners have a bad game on Summoner's Rift in League of Legends.  Also creates a leaderboard of the worst games.  Inspiried by my friend Jon, who ints League of Legends games a lot.
 
+You can invite my bot to your server [here!](https://discord.com/api/oauth2/authorize?client_id=769327183008235540&permissions=8&scope=bot)
+
 
 ## Table of Contents
 - [Getting Started](https://github.com/briankoehler/Jon-Int-Tracker#getting-started)
