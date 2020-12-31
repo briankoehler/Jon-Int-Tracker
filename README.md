@@ -3,7 +3,9 @@ Discord bot to provide updates when a dynamic list of specified summoners have a
 
 You can invite my bot to your server [here!](https://discord.com/api/oauth2/authorize?client_id=769327183008235540&permissions=8&scope=bot)
 
-![Example](https://i.imgur.com/XyiLhB0.png)
+<p align="center">
+    ![Example](https://i.imgur.com/XyiLhB0.png)
+</p>
 
 
 ## Table of Contents
