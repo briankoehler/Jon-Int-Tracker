@@ -1,6 +1,6 @@
 # leaderboard.py
 from class_def import Match
-from database import get_top_ints
+from database import get_top_ints, get_summoner_name_from_id
 from discord.ext import commands
 
 
@@ -22,7 +22,7 @@ class LeaderBoardCog(commands.Cog):
         leaderboard_string = '_ _\n\n**INT LEADERBOARD**\n--------------------\n'
         i = 0
         for i, match in enumerate(top_ints):
-            leaderboard_string += f'**{i + 1})** {match[5]}/{match[6]}/{match[7]} - {match[3]} ({match[4]})\n_ _' # k/d/a - summoner (champion)
+            leaderboard_string += f'**{i + 1})** {match[6]}/{match[7]}/{match[8]} - {get_summoner_name_from_id(match[4])} ({match[5]})\n_ _' # k/d/a - summoner (champion)
 
         # Adding any blank lines
         if i + 1 != 10:

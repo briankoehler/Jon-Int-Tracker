@@ -1,8 +1,8 @@
 # summoners.py
-import datetime, os
+import os
 import requests, json
-from database import get_summoners, add_summoner, remove_summoner
 from discord.ext import commands
+from database import get_summoners, add_summoner, remove_summoner
 from class_def import Summoner
 
 
