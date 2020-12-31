@@ -1,55 +1,16 @@
 # bot.py
-import os, datetime, pickle, random
+import os, random, logging
 import discord
 import requests, json
 import dotenv
-from summoners import load_summoners, update_summoners
-from leaderboard import update_leaderboard, write_leaderboard
-from class_def import Game, Summoner, Match
+import database
 from discord.ext import tasks, commands
-from datetime import date
-
-# ?s? = Summoner name
-# ?S? = All caps Summoner name
-# ?d? = # of deaths
-# ?k? = # of kills
-# ?a? = # of assists
-int_messages = {
-    'standard': [ # 0-10
-        '?s? just died **?d? times!** Wow!',
-        '**?k?/?d?/?a?** game coming from ?s?.  Nice.',
-        'Oof, **?k?/?d?/?a?** by ?s?. What OP score would that even be??',
-        'What a game by ?s?! **?d? deaths and ?k? kills!**',
-        'Yikes, **?d? deaths** and only ?k? kills for ?s? that last match.'
-    ],
-    'heavy': [ # 10-14
-        '**NEWS FLASH:** ?S? DROPS A **?d? DEATH** GAME',
-        'Damn, ?s? really died **?d? times** in one game.',
-        'WOW!  **?d? deaths** by ?s? in this int-heavy game!',
-        'Holy moly - **?d? DEATHS** BY ?S?!!'
-    ],
-    'turbo': [ # 15-19
-        'Get **shit** on ?s?! Suck my dick! **?d?**',
-        '**BREAKING NEWS:** ?S? INTS ANOTHER GAME WITH **?d? DEATHS**',
-        '**HOLY SMOKES!** ?s? just gifted us **?d? deaths!**'
-    ],
-    'turbo-mega': [ # 20+
-        'Incredible.  Once in a blue moon.  A **?d? death* game by ?s?.  We all all honored, ?s?.'
-    ]
-}
+from class_def import Summoner, Match
+from int_messages import int_messages
 
 
 # Bot Client
 bot = commands.Bot(command_prefix = '?')
-
-
-def log(message):
-    """Prints a message to the console with date/time
-
-    Args:
-        message (String): Message to print
-    """
-    print(f'[{datetime.datetime.now()}] {message}')
 
 
 def is_int(kills, deaths, assists):
@@ -75,140 +36,169 @@ def is_int(kills, deaths, assists):
     return False
 
 
+def get_champ_from_id(champ_id):
+    """Obtains a champion name given its ID assigned by Riot
+
+    Args:
+        id (int): Champion's ID
+
+    Returns:
+        str: Champion's name
+    """
+
+    response = requests.get('https://ddragon.leagueoflegends.com/api/versions.json')
+    version_data = json.loads(response.text)
+    patch = version_data[0]
+    
+    response = requests.get(url=f'http://ddragon.leagueoflegends.com/cdn/{patch}/data/en_US/champion.json')
+    champions = json.loads(response.text)
+    
+    for champion in champions['data']:
+        if champions['data'][champion]['key'] == str(champ_id):
+            return champion
+
+
 @tasks.loop(seconds=20)
 async def get_int():
     """Every 20s, check most recent match for every summoner int the summoners pickle and determine if it is an int"""
 
-    log('Executing get_int task...')
+    logging.info('Executing get_int task')
+    
+    # Checking each summoner of each guild
+    for g in database.get_guilds():
 
-    # Initialization
-    summoners = []
-
-    # Retrieving summoner info from pickle
-    number_of_sums, summoners = load_summoners()
-
-    # Checking each summoner's recent game
-    for i, summoner in enumerate(summoners):
-
-        # API Call
-        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.encrypted_id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
-        most_recent_match = json.loads(response.text)
-
-        # Storing information
-        try:
-            rm = Game(
-                most_recent_match['matches'][0]['gameId'], 
-                most_recent_match['matches'][0]['champion'], 
-                most_recent_match['matches'][0]['role'],
-                most_recent_match['matches'][0]['lane'],
-                most_recent_match['matches'][0]['queue']
-            )
-            if rm.lane == 'MID':
-                rm.lane = 'MIDDLE'
-        except:
-            log(f'Error getting match info for {summoner.name}...')
-            continue
-
-        # Check if a Summoner's Rift
-        if rm.queue != 400 and rm.queue != 420 and rm.queue != 440 and rm.queue != 700: # Draft, Solo, Flex, Clash
-            continue
-
-        # Make sure not an old game
-        LAST_GAME = summoner.last_game_id
-        if str(rm.game_id) != str(LAST_GAME):
-            summoners[i].last_game_id = rm.game_id
-        else:
-            continue
+        # Retrieving summoners list from database TODO: do by all guilds
+        guild_id = g[0]
+        summoners_tuples = database.get_summoners(guild_id)
         
-        log(f'Found new game for {summoner.name}')
-
-        # Second API Call to check game stats
-        response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(rm.game_id) + '?&api_key=' + RIOT_KEY)
-        match_summary = json.loads(response.text)
-
-        # Determine which participant is the current summoner and assign info
-        summoner_stats_info = None
-        parts = match_summary['participants']
-        for p in parts:
-            if str(p['championId']) == str(rm.champion) and str(p['timeline']['role']) == str(rm.role) and str(p['timeline']['lane']) == str(rm.lane):
-                summoner_stats_info = p
-
-        # Grab info we want from stats
-        kills = summoner_stats_info['stats']['kills']
-        deaths = summoner_stats_info['stats']['deaths']
-        assists = summoner_stats_info['stats']['assists']
+        # Initialization
+        summoners = []
         
-        # Updating leaderboard if necessary
-        new_leaderboard_match = Match(rm.game_id, rm.champion, summoner.name, kills, deaths, assists)
-        update_index = update_leaderboard(new_leaderboard_match)
-        
-        # Gettinc channel to message
-        if CHANNEL == '':
-            return
-        channel = bot.get_channel(int(CHANNEL)) # TODO Change this to be more flexible
+        # Setting Summoner objects
+        for s in summoners_tuples:
+            summoner_id = s[1]
+            summoner_name = s[2]
+            summoner_last_match = s[3]
+            summoners.append(Summoner(summoner_id, summoner_name, summoner_last_match))
 
-        # Sending a Discord message based on number of deaths
-        if is_int(kills, deaths, assists):
-            log(f'Sending a Discord message for {summoner.name}...')
-            if deaths >= 20:
-                msg = random.choice(int_messages['turbo-mega'])
-            elif deaths >= 15:
-                msg = random.choice(int_messages['turbo'])
-            elif deaths >= 10:
-                msg = random.choice(int_messages['heavy'])
+        # Checking each summoner's recent game
+        for i, summoner in enumerate(summoners):
+
+            # API Call
+            response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matchlists/by-account/' + summoner.id + '?endIndex=1&beginIndex=0&api_key=' + RIOT_KEY)
+            most_recent_match = json.loads(response.text)
+
+            # Storing information about match
+            try:
+                match_info = Match(str(most_recent_match['matches'][0]['gameId']), 
+                                summoner.id,
+                                most_recent_match['matches'][0]['champion'],
+                                most_recent_match['matches'][0]['role'], 
+                                'MIDDLE' if most_recent_match['matches'][0]['lane'] == 'MID' else most_recent_match['matches'][0]['lane'], 
+                                most_recent_match['matches'][0]['queue'])
+
+            except:
+                logging.error(f'Error getting match info for {summoner.name}...')
+                continue
+
+            # Check if a Summoner's Rift
+            if match_info.queue not in set((400, 420, 440, 700)): # Draft, Solo, Flex, Clash
+                continue
+
+            # Make sure not an old game
+            LAST_MATCH = summoner.last_match
+            if match_info.id != LAST_MATCH:
+                summoners[i].last_match = match_info.id
             else:
-                msg = random.choice(int_messages['standard'])
+                continue
+
+            logging.info(f'Found new game for {summoner.name}')
+
+            # Second API Call to check game stats
+            response = requests.get(url='https://na1.api.riotgames.com/lol/match/v4/matches/' + str(match_info.id) + '?&api_key=' + RIOT_KEY)
+            match_summary = json.loads(response.text)
+
+            # Determine which participant is the current summoner and assign info
+            summoner_stats_info = None
+            parts = match_summary['participants']
+            for p in parts:
+                if p['championId'] == match_info.champ and p['timeline']['role'] == match_info.role and p['timeline']['lane'] == match_info.lane:
+                    summoner_stats_info = p
+
+            # Grab info we want from stats
+            match_info.kills = summoner_stats_info['stats']['kills']
+            match_info.deaths = summoner_stats_info['stats']['deaths']
+            match_info.assists = summoner_stats_info['stats']['assists']
+            match_info.champ = get_champ_from_id(match_info.champ)
+            match_info.duration = match_summary['gameDuration']
+            match_info.date = match_summary['gameCreation']
+
+            # Determine if on the leaderboard and store index in update_index
+            prev_leaderboard = database.get_top_ints(guild_id)
+            update_index = -1
+            for j, slot in enumerate(prev_leaderboard):
+                if slot[6] < match_info.deaths:
+                    update_index = j + 1
+                elif slot[6] == match_info.deaths and slot[5] > match_info.kills:
+                    update_index = j + 1
+                elif slot[6] == match_info.deaths and slot[5] == match_info.kills and match_info.assists > match_info.assists:
+                    update_index = j + 1
+            
+            # Adding to database
+            database.add_match(guild_id, match_info)
+
+            # Getting channel to message
+            channel = database.get_channel(guild_id)
+            channel = bot.get_channel(int(channel))
+            
+            # Stop if not notification channel specified
+            if channel == None:
+                continue
+
+            # Sending a Discord message based on number of deaths
+            if is_int(match_info.kills, match_info.deaths, match_info.assists):
+                logging.info(f'Sending a Discord message for {summoner.name}...')
+                if match_info.deaths >= 20:
+                    msg = random.choice(int_messages['turbo-mega'])
+                elif match_info.deaths >= 15:
+                    msg = random.choice(int_messages['turbo'])
+                elif match_info.deaths >= 10:
+                    msg = random.choice(int_messages['heavy'])
+                else:
+                    msg = random.choice(int_messages['standard'])
+
+                # Replacing variables in template
+                msg = msg.replace('?s?', summoner.name)
+                msg = msg.replace('?S?', summoner.name.upper())
+                msg = msg.replace('?d?', str(match_info.deaths))
+                msg = msg.replace('?k?', str(match_info.kills))
+                msg = msg.replace('?a?', str(match_info.assists))
+
+                await channel.send(msg)
                 
-            # Replacing variables in template
-            msg = msg.replace('?s?', summoner.name)
-            msg = msg.replace('?S?', summoner.name.upper())
-            msg = msg.replace('?d?', str(deaths))
-            msg = msg.replace('?k?', str(kills))
-            msg = msg.replace('?a?', str(assists))
-            
-            await channel.send(msg)
-            
-            # Sending leaderboard message if necessary
-            if update_index != 0:
-                await channel.send(f'This is now **#{update_index}** on the int leaderboard!')
+                # Sending leaderboard message if necessary
+                if update_index != -1:
+                    await channel.send(f'This is now **#{update_index}** on the int leaderboard!')
 
-        # Updating Pickle File
-        update_summoners(summoners)
-
+            # Update Summoner table
+            database.update_summoner_match(guild_id, summoner.id, str(match_info.id))
+        
 
 @bot.command()
 async def here(ctx):
-    """Sets the notification channel to where this is sent
-
-    Args:
-        ctx (Context): Context of command
-    """
-    # Getting channel id and name
-    new_id = ctx.channel.id
-    new_name = ctx.channel.name
+    """Sets the notification channel to where this is sent"""
     
-    # Updating environment variable
-    dotenv_file = dotenv.find_dotenv()
-    os.environ['DISCORD_CHANNEL'] = str(new_id)
-    CHANNEL = CHANNEL = os.getenv('DISCORD_CHANNEL')
-    dotenv.set_key(dotenv_file, 'DISCORD_CHANNEL', os.environ['DISCORD_CHANNEL'])
+    # Updating database
+    database.update_guild_channel(str(ctx.guild.id), str(ctx.channel.id))
     
-    await ctx.send(f'Set the notification channel to {new_name} (ID: {new_id})')
+    await ctx.send(f'Set the notification channel to {ctx.channel.name} (ID: {ctx.channel.id})')
 
 
 @bot.command()
 async def jit(ctx):
-    """Sends a short about message and a list of commands
+    """Sends a short about message and links the GitHub"""
 
-    Args:
-        ctx (Context): Context of command
-    """
-    await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker\n\n' \
-        '?list - View tracking list\n' \
-        '?here - Sets the notification channel to wherever this is sent\n' \
-        '?add <Summoner Name> - Add a summoner to the tracking list\n' \
-        '?remove <Summoner Name> - Remove a summoner from the tracking list\n' \
-        '?leaderboard - Display the Int Leadeboard')
+    await ctx.send(f'_ _\n\nThank you for using the Jon-Int-Tracker.  Check the Github here: https://github.com/briankoehler/Jon-Int-Tracker')
 
 
 @bot.event
@@ -218,51 +208,64 @@ async def on_guild_join(guild):
     Args:
         guild (Guild): Guild object of joined guild
     """
+
+    # Add guild to database
+    database.add_guild(str(guild.id))
+    
+    # Sending help message to inviter
     bot_entry = await guild.audit_logs(action=discord.AuditLogAction.bot_add).flatten()
-    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?jit command to get started!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
+    await bot_entry[0].user.send('_ _\nThanks for using the Jon-Int-Tracker! Use the ?help command to get started!\nGithub: https://github.com/briankoehler/Jon-Int-Tracker')
+
+
+@bot.event
+async def on_guild_remove(guild):
+    """Cleans database
+
+    Args:
+        guild (Guild): Guild object of removed guild
+    """
+    
+    # Remove guild
+    database.remove_guild(str(guild.id))
 
 
 @bot.event
 async def on_ready():
-    log(f'{bot.user.name} has connected to Discord!')
-
+    logging.info(f'{bot.user.name} has connected to Discord!')
     get_int.start()
 
 
 if __name__ == '__main__':
     
-    if not os.path.isfile('summoners.pkl'):
-        update_summoners([])
+    # Logging configuration
+    logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.INFO, filename='info.log')
         
-    if not os.path.isfile('leaderboard.pkl'):
-        # Initializing leaderboard file
-        matches = []
-        for i in range(10):
-            matches.append('')
-
-        # Leaderboard Creation
-        write_leaderboard(matches)
+    # Checking if database exists
+    if not os.path.isfile('jit.db'):
+        database.create_database()
+        database.create_match_table()
+        database.create_summoner_table()
+        database.create_guild_table()
         
+    # Checking if environment file exists
     if not os.path.isfile('.env'):
         # Int Updates
         print('Thank you for using Jon Int Tracker (JIT).\nPlease provide the following details to setup the bot.  You can always change the .env file manually afterwards.')
         DISCORD_TOKEN = input('Enter your Discord bot token: ')
-        # DISCORD_CHANNEL = input('Enter your Discord Channel ID: ')
         RIOT_KEY = input('Enter your Riot API key: ')
 
         # Writing .env file
         with open('.env', 'w') as file:
             file.write('# .env\n\n')
             file.write(f'DISCORD_TOKEN="{DISCORD_TOKEN}"\n')
-            file.write(f'DISCORD_CHANNEL=""\n')
             file.write(f'RIOT_KEY="{RIOT_KEY}"\n')
         
     # Loading Environemnt Variables
     dotenv.load_dotenv()
     TOKEN = os.getenv('DISCORD_TOKEN')
-    CHANNEL = os.getenv('DISCORD_CHANNEL')
     RIOT_KEY = os.getenv('RIOT_KEY')
 
+    # Loading bot extensions
     bot.load_extension("summoners")
     bot.load_extension("leaderboard")
 
