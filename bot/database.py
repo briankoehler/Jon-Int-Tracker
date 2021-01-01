@@ -68,7 +68,7 @@ def get_top_ints(guild):
     c = conn.cursor()
     
     c.execute('''
-        WITH t1 AS (SELECT * FROM match WHERE guild == ? ORDER BY deaths DESC)
+        WITH t1 AS (SELECT * FROM match WHERE guild == ? ORDER BY deaths DESC, kills ASC, assists ASC)
             
         SELECT * FROM t1 LIMIT 10;
         ''', (guild,))

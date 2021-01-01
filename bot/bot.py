@@ -137,11 +137,11 @@ async def get_int():
             prev_leaderboard = database.get_top_ints(guild_id)
             update_index = -1
             for j, slot in enumerate(prev_leaderboard):
-                if slot[6] < match_info.deaths:
+                if slot[7] < match_info.deaths:
                     update_index = j + 1
-                elif slot[6] == match_info.deaths and slot[5] > match_info.kills:
+                elif slot[7] == match_info.deaths and slot[6] > match_info.kills:
                     update_index = j + 1
-                elif slot[6] == match_info.deaths and slot[5] == match_info.kills and match_info.assists > match_info.assists:
+                elif slot[7] == match_info.deaths and slot[6] == match_info.kills and slot[8] > match_info.assists:
                     update_index = j + 1
             
             # Adding to database
