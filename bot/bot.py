@@ -139,10 +139,13 @@ async def get_int():
             for j, slot in enumerate(prev_leaderboard):
                 if slot[7] < match_info.deaths:
                     update_index = j + 1
+                    break
                 elif slot[7] == match_info.deaths and slot[6] > match_info.kills:
                     update_index = j + 1
+                    break
                 elif slot[7] == match_info.deaths and slot[6] == match_info.kills and slot[8] > match_info.assists:
                     update_index = j + 1
+                    break
             
             # Adding to database
             database.add_match(guild_id, match_info)
@@ -266,7 +269,8 @@ if __name__ == '__main__':
     RIOT_KEY = os.getenv('RIOT_KEY')
 
     # Loading bot extensions
-    bot.load_extension("summoners")
-    bot.load_extension("leaderboard")
+    bot.load_extension('summoners')
+    bot.load_extension('leaderboard')
+    bot.load_extension('stats')
 
     bot.run(TOKEN)
