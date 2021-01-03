@@ -295,3 +295,28 @@ def get_channel(guild):
     c.execute('SELECT * FROM guild WHERE id = ?', (guild,))
     info = c.fetchall()
     return info[0][1]
+
+
+# MISC
+def get_stats(guild, summoner):
+    conn = sqlite3.connect('jit.db')
+    c = conn.cursor()
+    
+    c.execute('SELECT id FROM summoner WHERE guild = ? AND name = ?', (guild, summoner))
+    summoner_id = c.fetchone()[0]
+    
+    c.execute('SELECT count(id), sum(duration), sum(kills), sum(deaths), sum(assists) FROM match WHERE guild = ? AND summoner = ?', (guild, summoner_id))
+    stats = c.fetchone()
+    return stats
+    
+    
+def get_all_games_by_summoner(guild, summoner):
+    conn = sqlite3.connect('jit.db')
+    c = conn.cursor()
+    
+    c.execute('SELECT id FROM summoner WHERE guild = ? AND name = ?', (guild, summoner))
+    summoner_id = c.fetchone()[0]
+    
+    c.execute('SELECT * FROM match WHERE guild = ? AND summoner = ?', (guild, summoner_id))
+    games = c.fetchall()
+    return games
