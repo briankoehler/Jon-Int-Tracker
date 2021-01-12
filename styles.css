@@ -1,0 +1,50 @@
+
+div {
+    animation: fadein 3s;
+}
+
+@keyframes fadein {
+    from {opacity: 0;} to {opacity: 1;}
+}
+
+body {
+    background-color: rgb(223, 233, 235) !important;
+    font-family: 'Quicksand', sans-serif;
+    height: 100vh !important;
+    overflow: hidden;
+}
+
+.info {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    text-decoration: none;
+}
+
+.info a:link {
+    color: black;
+}
+
+.info a:visited {
+    color: black;
+}
+
+.info a:hover {
+    color: steelblue;
+}
+
+.container {
+    height: 100vh;
+}
+
+.txt-lg {
+    font-size: 40vh;
+}
+
+.txt-md {
+    font-size: 10vh;
+}
+
+.txt-sml {
+    font-size: 5vh;
+}
