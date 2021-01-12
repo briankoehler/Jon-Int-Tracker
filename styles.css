@@ -14,6 +14,10 @@ body {
     overflow: hidden;
 }
 
+.container {
+    text-align: center;
+}
+
 .info {
     position: absolute;
     top: 15px;
