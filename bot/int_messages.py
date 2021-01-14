@@ -22,7 +22,7 @@ int_messages = {
         'Holy moly - **?d? DEATHS** BY ?S?!!'
     ],
     'turbo': [ # 15-19
-        'Get **shit** on ?s?! Suck my dick! **?d?**',
+        'Get **pooped** on ?s?! That was a terrible game! **?d?**',
         '**BREAKING NEWS:** ?S? INTS ANOTHER GAME WITH **?d? DEATHS**',
         '**HOLY SMOKES!** ?s? just gifted us **?d? deaths!**'
     ],
