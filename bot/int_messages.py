@@ -27,6 +27,6 @@ int_messages = {
         '**HOLY SMOKES!** ?s? just gifted us **?d? deaths!**'
     ],
     'turbo-mega': [ # 20+
-        'Incredible.  Once in a blue moon.  A **?d? death* game by ?s?.  We all all honored, ?s?.'
+        'Incredible.  Once in a blue moon.  A **?d? death** game by ?s?.  We are all honored, ?s?.'
     ]
 }
