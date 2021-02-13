@@ -120,10 +120,13 @@ async def get_int():
 
             # Determine which participant is the current summoner and assign info
             summoner_stats_info = None
-            parts = match_summary['participants']
-            for p in parts:
-                if p['championId'] == match_info.champ and p['timeline']['role'] == match_info.role and p['timeline']['lane'] == match_info.lane:
-                    summoner_stats_info = p
+            try:
+                parts = match_summary['participants']
+                for p in parts:
+                    if p['championId'] == match_info.champ and p['timeline']['role'] == match_info.role and p['timeline']['lane'] == match_info.lane:
+                        summoner_stats_info = p
+            except:
+                logging.error(f'Error getting match info for {summoner.name}...')
 
             # Grab info we want from stats
             match_info.kills = summoner_stats_info['stats']['kills']
