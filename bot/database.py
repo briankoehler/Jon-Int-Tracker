@@ -302,7 +302,7 @@ def get_stats(guild, summoner):
     conn = sqlite3.connect('jit.db')
     c = conn.cursor()
     
-    c.execute('SELECT id FROM summoner WHERE guild = ? AND name = ?', (guild, summoner))
+    c.execute('SELECT id FROM summoner WHERE guild = ? AND REPLACE(LOWER(name), \' \', \'\') = ?', (guild, summoner.lower().replace(' ', '')))
     summoner_id = c.fetchone()[0]
     
     c.execute('SELECT count(id), sum(duration), sum(kills), sum(deaths), sum(assists) FROM match WHERE guild = ? AND summoner = ?', (guild, summoner_id))
@@ -314,7 +314,7 @@ def get_all_games_by_summoner(guild, summoner):
     conn = sqlite3.connect('jit.db')
     c = conn.cursor()
     
-    c.execute('SELECT id FROM summoner WHERE guild = ? AND name = ?', (guild, summoner))
+    c.execute('SELECT id FROM summoner WHERE guild = ? AND REPLACE(LOWER(name), \' \', \'\') = ?', (guild, summoner.lower().replace(' ', '')))
     summoner_id = c.fetchone()[0]
     
     c.execute('SELECT * FROM match WHERE guild = ? AND summoner = ?', (guild, summoner_id))
