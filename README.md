@@ -1,4 +1,4 @@
-# Jon-Int-Tracker
+# Int-Bot
 Discord bot to provide updates when a dynamic list of specified summoners have a bad game on Summoner's Rift in League of Legends.  Also creates a leaderboard of the worst games.  Inspiried by my friend Jon, who ints League of Legends games a lot.
 
 You can invite my bot to your server [here!](https://discord.com/api/oauth2/authorize?client_id=769327183008235540&permissions=8&scope=bot)
@@ -9,18 +9,18 @@ You can invite my bot to your server [here!](https://discord.com/api/oauth2/auth
 
 
 ## Table of Contents
-- [Getting Started](https://github.com/briankoehler/Jon-Int-Tracker#getting-started)
+- [Getting Started](https://github.com/briankoehler/int-bot#getting-started)
 
-- [Customization](https://github.com/briankoehler/Jon-Int-Tracker#customization)
+- [Customization](https://github.com/briankoehler/int-bot#customization)
 
-- [Planned Features](https://github.com/briankoehler/Jon-Int-Tracker#planned-features)
+- [Planned Features](https://github.com/briankoehler/int-bot#planned-features)
 
 
 ## Getting Started
 Use the following command to get the bot and its dependencies.
 ```
-git clone https://github.com/briankoehler/Jon-Int-Tracker/
-cd Jon-Int-Tracker
+git clone https://github.com/briankoehler/int-bot/
+cd int-bot
 pipenv install
 ```
 Retrieve your Riot API key at the [Riot Developer Portal](https://developer.riotgames.com/) and setup an application on the [Discord Developer Portal](https://discord.com/developers/docs/intro) and create a bot for your application there.  Once you want to run the bot:
